@@ -27,7 +27,7 @@ def _select_by_frequency(grouped_data: DataFrameGroupBy, frequency_thresh: float
     # Select only materials with more than one transactions
     frequencies = frequencies[record_counts > 1]
 
-    # Select only materials with higher transaction frequency than `rel_freq_thresh`
+    # Select only materials with higher transaction frequency than `frequency_thresh`
     frequencies = frequencies[frequencies >= frequency_thresh]
 
     return frequencies.index
