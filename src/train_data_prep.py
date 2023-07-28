@@ -100,12 +100,10 @@ def data_preparation(company_name: str, feature_name: str, mg_files, lookback,
 
 # frame a sequence as a supervised learning problem
 def _timeseries_to_short_seqs(series: ndarray, lookback: int = 1) -> ndarray:
-    short_seqs = []
-
-    for idx in range(len(series) - (lookback + 1)):
-        short_seqs.append(series[idx: idx + lookback + 1])
-
-    return np.asarray(short_seqs)
+    return np.asarray([
+        series[idx: idx + lookback + 1]
+        for idx in range(len(series) - (lookback + 1))
+    ])
 
 
 # scale train and test data to [-1, 1]
