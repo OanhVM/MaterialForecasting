@@ -30,7 +30,7 @@ def _save_seq_clusters_csvs(seq_clusters: List[List[Union[Series, ndarray]]], ds
 
 
 def cluster_cont_seqs(company_name: str, min_cont_length: int, selected_cont_length: int, col_name: str,
-                      n_cluster: int = 32,
+                      n_cluster: int, n_dim: int,
                       data_dir_path: str = "data"):
     data = read_cont_seqs_csv(company_name=company_name, min_cont_length=min_cont_length)
 
@@ -50,6 +50,7 @@ def cluster_cont_seqs(company_name: str, min_cont_length: int, selected_cont_len
     print(f"company_name =            {company_name}")
     print(f"selected_cont_length =    {selected_cont_length}")
     print(f"n_cluster =               {n_cluster}")
+    print(f"n_dim =                   {n_dim}")
     print(f"len(cont_seqs) =          {len(cont_seqs)}")
     print(f"len(selected_cont_seqs) = {len(selected_cont_seqs)}")
     print(f"len(train_cont_seqs) =    {len(train_cont_seqs)}")
@@ -85,8 +86,11 @@ def _main():
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
     arg_parser.add_argument("--selected-cont-length", metavar="", type=int, default=24)
     arg_parser.add_argument("--n-cluster", metavar="", type=int, default=32)
+    arg_parser.add_argument("--n-dim", metavar="", type=int, default=None)
 
     args = arg_parser.parse_args()
+
+    assert args.n_dim is None or 2 <= args.n_dim <= args.selected_cont_length
 
     for company_name in args.company_names:
         cluster_cont_seqs(
@@ -95,6 +99,7 @@ def _main():
             col_name=args.col_name,
             selected_cont_length=args.selected_cont_length,
             n_cluster=args.n_cluster,
+            n_dim=args.n_dim if args.n_dim is None else args.selected_cont_length,
         )
 
 
