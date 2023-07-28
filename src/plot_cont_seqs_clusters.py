@@ -142,6 +142,8 @@ def _main():
 
     args = arg_parser.parse_args()
 
+    assert args.n_dim is None or 2 <= args.n_dim <= args.selected_cont_length
+
     for company_name in args.company_names:
         plot_cont_seq_clusters(
             company_name=company_name,
