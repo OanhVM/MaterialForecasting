@@ -1,36 +1,14 @@
 import math
 from argparse import ArgumentParser
 from os.path import join
-from typing import Tuple, List
+from typing import List
 
 import numpy as np
 from matplotlib import pyplot as plt
 from numpy import ndarray
 from tslearn.barycenters import dtw_barycenter_averaging
 
-from common import get_cluster_results_base_name, read_cont_seqs_cluster_csv
-
-
-def _read_cont_seq_clusters(company_name: str, col_name: str, selected_cont_length: int,
-                            n_cluster: int, n_dim: int,
-                            data_dir_path: str,
-                            ) -> Tuple[List[List[ndarray]], int]:
-    # Read cluster data
-    cont_seqs_clusters = []
-    for cluster_idx in range(n_cluster):
-        data = read_cont_seqs_cluster_csv(
-            company_name=company_name, col_name=col_name,
-            selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
-            cluster_idx=cluster_idx,
-            data_dir_path=data_dir_path,
-        )
-        cont_seqs_clusters.append(
-            [cont_seq[col_name].values for _, cont_seq in data.groupby("SeqIdx")]
-        )
-
-    n_total_cont_seq = sum([len(cont_seqs) for cont_seqs in cont_seqs_clusters])
-
-    return cont_seqs_clusters, n_total_cont_seq
+from common import get_cluster_results_base_name, read_cont_seqs_cluster
 
 
 def _plot_cont_seq_clusters(cont_seqs_clusters: List[List[ndarray]], n_total_cont_seq: int,
@@ -110,11 +88,16 @@ def _plot_cont_seq_clusters_dist(cont_seqs_clusters: List[List[ndarray]],
 def plot_cont_seq_clusters(company_name: str, col_name: str, selected_cont_length: int, n_cluster: int, n_dim: int,
                            data_dir_path: str = "data",
                            ):
-    cont_seqs_clusters, n_total_cont_seq = _read_cont_seq_clusters(
-        company_name=company_name, col_name=col_name, selected_cont_length=selected_cont_length,
-        n_cluster=n_cluster, n_dim=n_dim,
-        data_dir_path=data_dir_path,
-    )
+    cont_seqs_clusters = [
+        read_cont_seqs_cluster(
+            company_name=company_name, col_name=col_name,
+            selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
+            cluster_idx=cluster_idx,
+            data_dir_path=data_dir_path,
+        )
+        for cluster_idx in range(n_cluster)
+    ]
+    n_total_cont_seq = sum([len(cont_seqs) for cont_seqs in cont_seqs_clusters])
 
     _plot_cont_seq_clusters(
         cont_seqs_clusters=cont_seqs_clusters, n_total_cont_seq=n_total_cont_seq,

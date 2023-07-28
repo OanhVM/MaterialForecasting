@@ -1,7 +1,8 @@
 from os.path import join
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import pandas as pd
+from numpy import ndarray
 from parse import parse
 
 CONT_SEQ_FILE_NAME_FORMAT = "{company_name}_cont_seqs_min_{min_cont_length:d}.csv"
@@ -107,9 +108,10 @@ def read_cont_seqs_csv(company_name: str, min_cont_length: int, data_dir_path: s
     return data
 
 
-def read_cont_seqs_cluster_csv(company_name: str, col_name: str,
-                               selected_cont_length: int, n_cluster: int, n_dim: int, cluster_idx: int,
-                               data_dir_path: str = "data"):
+def read_cont_seqs_cluster(company_name: str, col_name: str,
+                           selected_cont_length: int, n_cluster: int, n_dim: int, cluster_idx: int,
+                           data_dir_path: str = "data",
+                           ) -> List[ndarray]:
     data = pd.read_csv(
         get_cont_seqs_cluster_csv_file_path(
             company_name=company_name, selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
@@ -119,4 +121,4 @@ def read_cont_seqs_cluster_csv(company_name: str, col_name: str,
         dtype={col_name: float, "SeqIdx": int},
     )
 
-    return data
+    return [cont_seq[col_name].values for _, cont_seq in data.groupby("SeqIdx")]
