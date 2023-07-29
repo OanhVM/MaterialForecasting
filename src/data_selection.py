@@ -19,10 +19,10 @@ def _select_by_significance(grouped_data: DataFrameGroupBy, col_name: str = "Spe
 
 
 def _select_by_frequency(grouped_data: DataFrameGroupBy, frequency_thresh: float = 0.4) -> MultiIndex:
-    grouped_epoch_ms = grouped_data["EpochM"]
+    grouped_epoch_months = grouped_data["EpochM"]
 
-    record_counts = grouped_epoch_ms.count()
-    frequencies = record_counts / (grouped_epoch_ms.max() - grouped_epoch_ms.min() + 1)
+    record_counts = grouped_epoch_months.count()
+    frequencies = record_counts / (grouped_epoch_months.max() - grouped_epoch_months.min() + 1)
 
     # Select only materials with more than one transactions
     frequencies = frequencies[record_counts > 1]
