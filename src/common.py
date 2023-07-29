@@ -11,6 +11,11 @@ CONT_SEQ_FILE_NAME_FORMAT = "{company_name}_cont_seqs_min_{min_cont_length:d}.cs
 CLUSTER_RESULTS_BASE_NAME_FORMAT = (
     "{company_name}_cont_seq_clusters_l{selected_cont_length:d}_k{n_cluster:d}_d{n_dim:d}"
 )
+DELIMITER_PER_COMPANY_NAME = {
+    "A": ",",
+    "B": ";",
+    "C": ";",
+}
 
 
 def get_cluster_results_base_name(company_name: str, selected_cont_length: int, n_cluster: int,
@@ -54,10 +59,10 @@ def get_cont_seqs_cluster_csv_file_path(
     )
 
 
-def read_source_csv(company_name: str, delimiter: str, data_dir_path: str = "data"):
+def read_source_csv(company_name: str, data_dir_path: str = "data"):
     data = pd.read_csv(
         join(data_dir_path, company_name, f"{company_name}.csv"),
-        delimiter=delimiter,
+        delimiter=DELIMITER_PER_COMPANY_NAME[company_name],
         dtype={
             "MaterialNo": object,
             "MaterialGroupNo": object,

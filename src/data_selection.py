@@ -33,8 +33,8 @@ def _select_by_frequency(grouped_data: DataFrameGroupBy, frequency_thresh: float
     return frequencies.index
 
 
-def main(company_name: str, delimiter: str):
-    data = read_source_csv(company_name=company_name, delimiter=delimiter)
+def main(company_name: str):
+    data = read_source_csv(company_name=company_name)
 
     grouped_data = data.groupby(["MaterialNo", "MaterialGroupNo"])
 
@@ -79,6 +79,7 @@ def main(company_name: str, delimiter: str):
 
 if __name__ == '__main__':
     # TODO: add dry run mode
-    main(company_name="A", delimiter=",")
-    main(company_name="B", delimiter=";")
-    main(company_name="C", delimiter=";")
+    # TODO: argpase
+    main(company_name="A")
+    main(company_name="B")
+    main(company_name="C")
