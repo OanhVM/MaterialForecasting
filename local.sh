@@ -10,7 +10,7 @@ fi
 
 # Activate virtualenv
 source "${VIRTUALENV_PATH}"/bin/activate
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/venv/lib/python3.9/site-packages/"
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/venv/lib/python3.*/site-packages/"
 
 # Get project directory
 export APP_PATH=$(pwd)
