@@ -26,23 +26,28 @@ def _get_dist(company_name: str, tag: str) -> Tuple[List[Tuple[int, int]], ndarr
 
 
 def _make_plot(company_name: str, bin_edges: List[Tuple[int, int]], bin_sizes: ndarray, max_bin_size: int,
-               tag: Literal["raw", "selected", "continuous"], do_show_numbers: bool,
+               tag: Literal["raw", "selected", "continuous"],
                ):
-    fig, ax = plt.subplots(figsize=(6 * 0.8, 8 * 0.8), dpi=150)
+    fig, ax = plt.subplots(figsize=(7 * 0.8, 8 * 0.8), dpi=150)
 
-    ax.bar(range(len(bin_sizes)), bin_sizes, width=0.8)
+    ax.bar(range(len(bin_sizes)), bin_sizes, width=0.75)
+    ax.bar_label(
+        ax.containers[0],
+        labels=[f"{bin_size / 1000:.0f}K" if bin_size > 1e4 else bin_size for bin_size in bin_sizes],
+        label_type="edge",
+    )
 
     ax.set_xticks([i for i in range(len(bin_sizes))])
-    ax.set_xticklabels([f"{bin_edge[0]} - {bin_edge[1]}" for bin_edge in bin_edges])
+    ax.set_xticklabels([
+        f"{bin_edge[0]} - {bin_edge[1]}" if bin_edge[0] != bin_edge[1] else f"{bin_edge[0]}"
+        for bin_edge in bin_edges
+    ])
 
     ax.set_ylim([0, max_bin_size * 1.1])
-    y_ticks = range(0, int(max_bin_size * 1.1), 25000)
-    ax.set_yticks(y_ticks)
-    ax.set_yticklabels([f"{y // 1000:4}K" if y > 0 else f"{y:4}" for y in y_ticks])
+    ax.set_yticks([])
 
-    tag_title_text = f" {tag.capitalize()}" if tag != "raw" else ""
     ax.set_title(
-        f"Frequency distribution of{tag_title_text} SKU series lengths\n"
+        f"Frequency distribution of{f' {tag}' if tag != 'raw' else ''} SKU series lengths\n"
         f"Company {company_name} "
     )
     ax.set_xlabel("Series Length Brackets")
@@ -50,17 +55,11 @@ def _make_plot(company_name: str, bin_edges: List[Tuple[int, int]], bin_sizes: n
 
     fig.tight_layout()
 
-    if do_show_numbers:
-        ax.bar_label(ax.containers[0], label_type="edge")
-        plot_file_name = f"freq_dist_series_length_{tag}_numbered_{company_name}.png"
-    else:
-        plot_file_name = f"freq_dist_series_length_{tag}_{company_name}.png"
-
-    plt.savefig(join("data", company_name, plot_file_name))
+    plt.savefig(join("data", company_name, f"freq_dist_series_length_{tag}_{company_name}.png"))
     plt.close()
 
 
-def _plot_dist(company_names: List[str], tag: Literal["raw", "selected", "continuous"], do_show_numbers: bool):
+def _plot_dist(company_names: List[str], tag: Literal["raw", "selected", "continuous"], ):
     dist_per_company_name = {
         company_name: _get_dist(company_name=company_name, tag=tag)
         for company_name in company_names
@@ -73,7 +72,7 @@ def _plot_dist(company_names: List[str], tag: Literal["raw", "selected", "contin
         _make_plot(
             company_name=company_name,
             bin_edges=bin_edges, bin_sizes=bin_sizes, max_bin_size=max_bin_size,
-            tag=tag, do_show_numbers=do_show_numbers,
+            tag=tag,
         )
 
 
@@ -82,14 +81,12 @@ def _main():
 
     arg_parser.add_argument("tag", type=str, choices=["raw", "selected", "continuous"])
     arg_parser.add_argument("company_names", type=str, nargs="+", help="company names")
-    arg_parser.add_argument("--show-numbers", action="store_true")
 
     args = arg_parser.parse_args()
 
     _plot_dist(
         company_names=args.company_names,
         tag=args.tag,
-        do_show_numbers=args.show_numbers,
     )
 
 
