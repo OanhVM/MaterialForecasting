@@ -9,23 +9,21 @@ from train_data_prep import _difference
 
 
 def std_calculation_threaded(company_name: str, min_cont_length: int):
-    data = read_cont_seqs_csv(company_name=company_name, min_cont_length=min_cont_length)
-
-    grouped_cont_seq_rows = data.groupby("SequenceName")
+    cont_seqs = read_cont_seqs_csv(company_name=company_name, min_cont_length=min_cont_length)
 
     records = []
-    for cont_seq_idx, (_, cont_seq_rows) in enumerate(grouped_cont_seq_rows):
-        print(f"company_name = {company_name}; cont_seq_idx = {cont_seq_idx + 1} / {len(grouped_cont_seq_rows)}")
+    for cont_seq_idx, cont_seq in enumerate(cont_seqs):
+        print(f"company_name = {company_name}; cont_seq_idx = {cont_seq_idx + 1} / {len(cont_seqs)}")
 
-        spends = np.array(data["Spend"])
+        spends = np.array(cont_seq["Spend"])
         spend_diffs = _difference(spends)
         scaled_spend_diffs = MinMaxScaler(feature_range=(-1, 1)).fit_transform(spend_diffs.reshape(-1, 1))
         std = np.std(scaled_spend_diffs)
 
         records.append({
-            "MaterialNo": data["MaterialNo"][0],
-            "MaterialGroupNo": data["MaterialGroupNo"][0],
-            "SequenceName": data["SequenceName"][0],
+            "MaterialNo": cont_seq["MaterialNo"][0],
+            "MaterialGroupNo": cont_seq["MaterialGroupNo"][0],
+            "SequenceName": cont_seq["SequenceName"][0],
             "NoOfTransactions": len(spends),
             "STD": std,
         })

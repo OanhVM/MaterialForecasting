@@ -32,18 +32,17 @@ def _save_seq_clusters_csvs(seq_clusters: List[List[Union[Series, ndarray]]], ds
 def cluster_cont_seqs(company_name: str, min_cont_length: int, selected_cont_length: int, col_name: str,
                       n_cluster: int, n_dim: int,
                       data_dir_path: str = "data"):
-    data = read_cont_seqs_csv(company_name=company_name, min_cont_length=min_cont_length)
+    cont_seqs = read_cont_seqs_csv(company_name=company_name, min_cont_length=min_cont_length, col_name=col_name)
 
-    cont_seqs = data.groupby("SequenceName")
     selected_cont_seqs = [
-        cont_seq[col_name] for _, cont_seq in cont_seqs
+        cont_seq for cont_seq in cont_seqs
         if len(cont_seq) >= selected_cont_length
     ]
 
     train_cont_seqs = []
     for selected_cont_seq in selected_cont_seqs:
         train_cont_seqs.extend([
-            selected_cont_seq.iloc[i: i + selected_cont_length]
+            selected_cont_seq[i: i + selected_cont_length]
             for i in range(len(selected_cont_seq) - selected_cont_length)
         ])
 
