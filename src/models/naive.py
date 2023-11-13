@@ -5,6 +5,8 @@ from keras import Model
 from keras.metrics import RootMeanSquaredError
 from numpy import ndarray
 
+from models.base_exp import BaseExpModel
+
 
 class NaiveModel(Model):
 
@@ -30,20 +32,27 @@ def preprocess_naive(cont_seqs: List[ndarray]) -> Tuple[List[ndarray], List[ndar
     return Xs, Ys
 
 
-def _eval(model: Model, Xs: List[ndarray], Ys: List[ndarray]):
-    scores = [
-        model.evaluate(x, y, verbose=0, batch_size=32)
-        for x, y in zip(Xs, Ys)
-    ]
-
-    avg_scores = np.average(scores, axis=0)
-    print(f"avg_scores = {avg_scores}")
-
-
-def build_and_train_naive(cont_seqs: List[ndarray], *args, **kwargs):
+def evaluate_naive(cont_seqs: List[ndarray]) -> Tuple[float, float]:
     Xs, Ys = preprocess_naive(cont_seqs=cont_seqs)
 
     model = _build()
-    _eval(model=model, Xs=Xs, Ys=Ys)
 
-    return model
+    scores = []
+    for x, y in zip(Xs, Ys):
+        _scores = model.test_on_batch(x, y)
+        scores.append(_scores)
+
+    avg_loss, avg_rmse = np.average(scores, axis=0).astype(float)
+    return avg_loss, avg_rmse
+
+
+class Naive(BaseExpModel):
+
+    def __init__(self):
+        super(BaseExpModel, self).__init__()
+
+    def _build_and_train(self, cont_seqs: List[ndarray], n_epoch: int, *args, **kwargs):
+        return self
+
+    def _eval(self, cont_seqs: List[ndarray], *args, **kwargs):
+        return evaluate_naive(cont_seqs=cont_seqs)
