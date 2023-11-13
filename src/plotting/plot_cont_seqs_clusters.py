@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from numpy import ndarray
 from tslearn.barycenters import dtw_barycenter_averaging
 
-from common import get_cluster_results_base_name, read_cont_seqs_cluster
+from common import get_cluster_results_base_name, read_cont_seqs_cluster_csv
 
 
 def _plot_cont_seq_clusters(cont_seqs_clusters: List[List[ndarray]], n_total_cont_seq: int,
@@ -89,7 +89,7 @@ def plot_cont_seq_clusters(company_name: str, col_name: str, selected_cont_lengt
                            data_dir_path: str = "data",
                            ):
     cont_seqs_clusters = [
-        read_cont_seqs_cluster(
+        read_cont_seqs_cluster_csv(
             company_name=company_name, col_name=col_name,
             selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
             cluster_idx=cluster_idx,
