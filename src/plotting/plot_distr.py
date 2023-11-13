@@ -6,17 +6,23 @@ import numpy as np
 from matplotlib import pyplot as plt
 from numpy import ndarray
 
-from common import read_source_csv, read_selected_data_csv
+from common import read_source_csv, read_selected_data_csv, read_cont_seqs_csv
 
-_READ_FUNC_PER_TAG = {
-    "raw": read_source_csv,
-    "selected": read_selected_data_csv,
+_COUNT_FUNC_PER_TAG = {
+    "raw": lambda company_name: read_source_csv(
+        company_name=company_name,
+    ).groupby(["MaterialNo", "MaterialGroupNo"])["EpochM"].count().values,
+    "selected": lambda company_name: read_selected_data_csv(
+        company_name=company_name,
+    ).groupby(["MaterialNo", "MaterialGroupNo"])["EpochM"].count().values,
+    "continuous": lambda company_name: np.asarray([
+        len(cont_seq) for cont_seq in read_cont_seqs_csv(company_name=company_name)
+    ]),
 }
 
 
-def _get_dist(company_name: str, tag: str) -> Tuple[List[Tuple[int, int]], ndarray]:
-    data = _READ_FUNC_PER_TAG[tag](company_name=company_name)
-    counts = data.groupby(["MaterialNo", "MaterialGroupNo"])["EpochM"].count().values
+def _get_distr(company_name: str, tag: str) -> Tuple[List[Tuple[int, int]], ndarray]:
+    counts = _COUNT_FUNC_PER_TAG[tag](company_name=company_name)
 
     bins = [2, 12, 24, 36, 48, counts.max() + 1]
     bin_edges = [(bins[i], bins[i + 1] - 1) for i in range(len(bins) - 1)]
@@ -55,13 +61,13 @@ def _make_plot(company_name: str, bin_edges: List[Tuple[int, int]], bin_sizes: n
 
     fig.tight_layout()
 
-    plt.savefig(join("data", company_name, f"freq_dist_series_length_{tag}_{company_name}.png"))
+    plt.savefig(join("data", company_name, f"freq_distr_series_length_{tag}_{company_name}.png"))
     plt.close()
 
 
-def _plot_dist(company_names: List[str], tag: Literal["raw", "selected", "continuous"], ):
+def _plot_distr(company_names: List[str], tag: Literal["raw", "selected", "continuous"], ):
     dist_per_company_name = {
-        company_name: _get_dist(company_name=company_name, tag=tag)
+        company_name: _get_distr(company_name=company_name, tag=tag)
         for company_name in company_names
     }
 
@@ -84,7 +90,7 @@ def _main():
 
     args = arg_parser.parse_args()
 
-    _plot_dist(
+    _plot_distr(
         company_names=args.company_names,
         tag=args.tag,
     )
