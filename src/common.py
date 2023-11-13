@@ -93,15 +93,17 @@ def read_selected_data_csv(company_name: str, data_dir_path: str = "data"):
     )
 
 
-def read_cont_seqs_csv(company_name: str, min_cont_length: int,
+def read_cont_seqs_csv(company_name: str, min_cont_length: int = 2,
                        col_name: Optional[str] = None,
                        data_dir_path: str = "data",
                        ) -> List[Union[ndarray, DataFrame]]:
+    csv_file_path = join(
+        data_dir_path, company_name,
+        CONT_SEQ_FILE_NAME_FORMAT.format(company_name=company_name, min_cont_length=min_cont_length),
+    )
+
     data = pd.read_csv(
-        join(
-            data_dir_path, company_name,
-            CONT_SEQ_FILE_NAME_FORMAT.format(company_name=company_name, min_cont_length=min_cont_length),
-        ),
+        csv_file_path,
         dtype={
             "MaterialNo": object,
             "MaterialGroupNo": object,
@@ -114,23 +116,31 @@ def read_cont_seqs_csv(company_name: str, min_cont_length: int,
         },
     )
 
-    return [
+    cont_seqs = [
         cont_seq[col_name].values if col_name else cont_seq
         for _, cont_seq in data.groupby("SequenceName")
     ]
+    print(f"Found {len(cont_seqs)} cont_seqs in {csv_file_path}.")
+
+    return cont_seqs
 
 
-def read_cont_seqs_cluster(company_name: str, col_name: str,
-                           selected_cont_length: int, n_cluster: int, n_dim: int, cluster_idx: int,
-                           data_dir_path: str = "data",
-                           ) -> List[ndarray]:
+def read_cont_seqs_cluster_csv(company_name: str, col_name: str,
+                               selected_cont_length: int, n_cluster: int, n_dim: int, cluster_idx: int,
+                               data_dir_path: str = "data",
+                               ) -> List[ndarray]:
+    csv_file_path = get_cont_seqs_cluster_csv_file_path(
+        company_name=company_name, selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
+        cluster_idx=cluster_idx,
+        data_dir_path=data_dir_path,
+    )
+
     data = pd.read_csv(
-        get_cont_seqs_cluster_csv_file_path(
-            company_name=company_name, selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
-            cluster_idx=cluster_idx,
-            data_dir_path=data_dir_path,
-        ),
+        csv_file_path,
         dtype={col_name: float, "SeqIdx": int},
     )
 
-    return [cont_seq[col_name].values for _, cont_seq in data.groupby("SeqIdx")]
+    cont_seqs = [cont_seq[col_name].values for _, cont_seq in data.groupby("SeqIdx")]
+    print(f"Found {len(cont_seqs)} cont_seqs in {csv_file_path}.")
+
+    return cont_seqs
