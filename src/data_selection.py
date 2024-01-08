@@ -45,31 +45,31 @@ def main(company_name: str):
     selected_data = data.set_index(["MaterialNo", "MaterialGroupNo"]).loc[selected_inds]
 
     print(
-        f"company_name =                                                                                        "
+        f"company_name\t"
         f"{company_name}"
     )
     print(
-        f"total number of rows =                                                                                "
+        f"total number of rows\t"
         f"{len(data)}"
     )
     print(
-        f"number of unique (\"MaterialNo\", \"MaterialGroupNo\") pairs =                                        "
+        f"number of SKUs\t"
         f"{len(grouped_data)}"
     )
     print(
-        f"number of unique (\"MaterialNo\", \"MaterialGroupNo\") pairs selected by significance =               "
+        f"number of SKUs selected by significance\t"
         f"{len(selected_significance_inds)}"
     )
     print(
-        f"number of unique (\"MaterialNo\", \"MaterialGroupNo\") pairs selected by frequency =                  "
+        f"number of SKUs selected by frequency\t"
         f"{len(selected_frequency_inds)}"
     )
     print(
-        f"number of unique (\"MaterialNo\", \"MaterialGroupNo\") pairs selected by significance and frequency = "
+        f"number of SKUs selected by significance and frequency\t"
         f"{len(selected_inds)}"
     )
     print(
-        f"total number of selected rows =                                                                       "
+        f"total number of selected rows\t"
         f"{len(selected_data)}"
     )
     print()
