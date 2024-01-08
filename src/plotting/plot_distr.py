@@ -33,8 +33,9 @@ def _get_distr(company_name: str, tag: str) -> Tuple[List[Tuple[int, int]], ndar
 
 def _make_plot(company_name: str, bin_edges: List[Tuple[int, int]], bin_sizes: ndarray, max_bin_size: int,
                tag: Literal["raw", "selected", "continuous"],
+               scale: float = 0.5
                ):
-    fig, ax = plt.subplots(figsize=(7 * 0.8, 8 * 0.8), dpi=150)
+    fig, ax = plt.subplots(figsize=(7 * scale, 8 * scale), dpi=150)
 
     ax.bar(range(len(bin_sizes)), bin_sizes, width=0.75)
     ax.bar_label(
@@ -53,7 +54,6 @@ def _make_plot(company_name: str, bin_edges: List[Tuple[int, int]], bin_sizes: n
     ax.set_yticks([])
 
     ax.set_title(
-        f"Frequency distribution of{f' {tag}' if tag != 'raw' else ''} SKU series lengths\n"
         f"Company {company_name} "
     )
     ax.set_xlabel("Series Length Brackets")
