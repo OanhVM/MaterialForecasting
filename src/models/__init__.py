@@ -1,9 +1,5 @@
-from enum import Enum
-
+from models.base_exp import BaseExpModel
 from models.lstm_stateful import StatefulLSTM
-from models.naive import Naive
 
-
-class ModelType(Enum):
-    NAIVE = Naive
-    LSTM_STATEFUL = StatefulLSTM
+# class ModelType(BaseExpModel, Enum):
+#     LSTM_STATEFUL = StatefulLSTM
