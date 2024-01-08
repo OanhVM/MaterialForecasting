@@ -45,13 +45,9 @@ def _main():
     arg_parser.add_argument("company_names", type=str, nargs="+")
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
     arg_parser.add_argument("--min-cont-length", metavar="", type=int, default=2)
-    arg_parser.add_argument("--selected-cont-length", metavar="", type=int, default=24)
-    arg_parser.add_argument("--n-dim", metavar="", type=int, default=None)
     arg_parser.add_argument("--do-diff", action="store_true")
 
     args = arg_parser.parse_args()
-
-    assert args.n_dim is None or 2 <= args.n_dim <= args.selected_cont_length
 
     for company_name in args.company_names:
         _eval_global(

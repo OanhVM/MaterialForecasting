@@ -99,7 +99,7 @@ def read_cont_seqs_csv(company_name: str, min_cont_length: int = 2,
                        ) -> List[Union[ndarray, DataFrame]]:
     csv_file_path = join(
         data_dir_path, company_name,
-        CONT_SEQ_FILE_NAME_FORMAT.format(company_name=company_name, min_cont_length=min_cont_length),
+        CONT_SEQ_FILE_NAME_FORMAT.format(company_name=company_name, min_cont_length=2),
     )
 
     data = pd.read_csv(
@@ -119,6 +119,7 @@ def read_cont_seqs_csv(company_name: str, min_cont_length: int = 2,
     cont_seqs = [
         cont_seq[col_name].values if col_name else cont_seq
         for _, cont_seq in data.groupby("SequenceName")
+        if len(cont_seq) >= min_cont_length
     ]
     print(f"Found {len(cont_seqs)} cont_seqs in {csv_file_path}.")
 
