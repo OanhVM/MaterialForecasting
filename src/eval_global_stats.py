@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 from numpy import ndarray
 
-from common import read_cont_seqs_csv
+from common import read_cont_seqs_csv, update_global_stats_results_csv_file_name
 from models.arima import evaluate_arima
 from models.naive import evaluate_naive
 
@@ -13,6 +13,8 @@ EVAL_FUNC_PER_MODEL_NAME = {
     "arima_6": lambda *args, **kwargs: evaluate_arima(*args, **kwargs, lag=6),
 }
 
+
+# TODO: consider forecast_horizon > 1
 
 def eval_model(model_name: str, cont_seqs: List[ndarray]):
     return EVAL_FUNC_PER_MODEL_NAME[model_name](cont_seqs=cont_seqs)
@@ -32,8 +34,13 @@ def _eval_global(model_name: str,
     cont_seqs = [np.diff(seq) for seq in cont_seqs] if do_diff else cont_seqs
 
     rmse = eval_model(model_name=model_name, cont_seqs=cont_seqs)
-    print(
-        f"model_name = {model_name:12}; company = {company_name}; rmse = {rmse:10.6f}"
+
+    update_global_stats_results_csv_file_name(
+        model_name=model_name,
+        company_name=company_name, col_name=col_name,
+        min_cont_length=min_cont_length,
+        do_diff=do_diff,
+        rmse=rmse,
     )
 
 

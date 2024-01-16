@@ -1,4 +1,5 @@
-from os.path import join
+from os import makedirs
+from os.path import join, abspath, pardir, isfile, dirname
 from typing import Optional, Tuple, List, Union
 
 import pandas as pd
@@ -16,6 +17,41 @@ DELIMITER_PER_COMPANY_NAME = {
     "B": ";",
     "C": ";",
 }
+
+PROJECT_ROOT_DIR_PATH = abspath(join(abspath(__file__), pardir, pardir))
+
+RESULTS_DIR_PATH = join(PROJECT_ROOT_DIR_PATH, "results")
+GLOBAL_STATS_RESULTS_CSV_FILE_PATH = join(RESULTS_DIR_PATH, "global_stats_results.csv")
+
+
+def update_global_stats_results_csv_file_name(model_name: str,
+                                              company_name: str, col_name: str,
+                                              min_cont_length: int,
+                                              do_diff: bool,
+                                              rmse: float,
+                                              ):
+    print(f"Writing to {GLOBAL_STATS_RESULTS_CSV_FILE_PATH}...")
+
+    if isfile(GLOBAL_STATS_RESULTS_CSV_FILE_PATH):
+        results_df = pd.read_csv(
+            GLOBAL_STATS_RESULTS_CSV_FILE_PATH,
+            index_col=["model_name", "company_name", "col_name", "min_cont_length", "do_diff"]
+        )
+        results_df.loc[(model_name, company_name, col_name, min_cont_length, do_diff)] = rmse
+    else:
+        results_df = DataFrame.from_records([{
+            "model_name": model_name,
+            "company_name": company_name,
+            "col_name": col_name,
+            "min_cont_length": min_cont_length,
+            "do_diff": do_diff,
+            "rmse": rmse,
+        }]).set_index(["model_name", "company_name", "col_name", "min_cont_length", "do_diff"])
+
+    makedirs(dirname(GLOBAL_STATS_RESULTS_CSV_FILE_PATH), exist_ok=True)
+    results_df.to_csv(GLOBAL_STATS_RESULTS_CSV_FILE_PATH)
+
+    print(f"Writing to {GLOBAL_STATS_RESULTS_CSV_FILE_PATH}... DONE!")
 
 
 def get_cluster_results_base_name(company_name: str, selected_cont_length: int, n_cluster: int,
@@ -78,9 +114,9 @@ def read_source_csv(company_name: str, data_dir_path: str = "data"):
     return data[["MaterialNo", "MaterialGroupNo", "Y", "M", "EpochM", "Spend", "Quantity"]]
 
 
-def read_selected_data_csv(company_name: str, data_dir_path: str = "data"):
+def read_selected_data_csv(company_name: str):
     return pd.read_csv(
-        join(data_dir_path, company_name, f"{company_name}_selected.csv"),
+        get_selected_data_csv_file_path(company_name=company_name),
         dtype={
             "MaterialNo": object,
             "MaterialGroupNo": object,
