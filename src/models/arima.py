@@ -1,39 +1,42 @@
 import logging
 import warnings
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 from numpy import ndarray
+from numpy.linalg import LinAlgError
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from statsmodels.tsa.arima.model import ARIMA
 
 warnings.simplefilter('ignore', ConvergenceWarning)
 
 
-def evaluate_arima(cont_seqs: List[ndarray], lag: int, max_workers: int = 4) -> Tuple[float, float]:
-    # TODO: is here the place for cont_seqs filtering?
-    cont_seqs = [s for s in cont_seqs if len(s) > lag]
-
-    def _pred_arima(cont_seq: ndarray) -> Tuple[float, float]:
-        return ARIMA(cont_seq[:-1], order=(lag, 0, 0)).fit().forecast(steps=1)[0]
+def evaluate_arima(cont_seqs: List[ndarray], horizons: List[int], lag: int) -> List[float]:
+    max_horizon = max(horizons)
+    horizons = np.asarray(horizons)
 
     preds = []
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        futures = [
-            executor.submit(_pred_arima, cont_seq=cont_seq)
-            for cont_seq in cont_seqs
-        ]
-
-        for future in as_completed(futures):
-            try:
-                preds.append(future.result())
-            except Exception as e:
-                logging.exception(e)
-
+    labels = []
+    for idx, cont_seq in enumerate(cont_seqs):
+        try:
+            arima_result = ARIMA(cont_seq[:-max_horizon], order=(lag, 0, 0)).fit()
+            preds.append(
+                arima_result.forecast(steps=max_horizon)[horizons - 1]
+            )
+            labels.append(
+                cont_seq[-max_horizon:][horizons - 1]
+            )
+        except LinAlgError:
+            logging.error(
+                f"idx = {idx:4d}/{len(cont_seqs)} ; len(cont_seq) = {len(cont_seq):3d};\n"
+                f"cont_seq =\n{cont_seq}"
+            )
     preds = np.asarray(preds)
-    labels = np.asarray([c[-1] for c in cont_seqs])
+    labels = np.asarray(labels)
 
-    rmse = np.mean(labels ** 2 - preds ** 2) ** 0.5
-
-    return rmse
+    squared_errs = (labels - preds) ** 2
+    rmses = [
+        np.mean(squared_errs[:, :horizon]) ** 0.5
+        for horizon in horizons
+    ]
+    return rmses

@@ -1,13 +1,23 @@
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 from numpy import ndarray
 
 
-def evaluate_naive(cont_seqs: List[ndarray]) -> Tuple[float, float]:
-    preds = np.asarray([c[-2] for c in cont_seqs])
-    labels = np.asarray([c[-1] for c in cont_seqs])
+def evaluate_naive(cont_seqs: List[ndarray], horizons: List[int]) -> List[float]:
+    max_horizon = max(horizons)
+    horizons = np.asarray(horizons)
 
-    rmse = np.mean(labels ** 2 - preds ** 2) ** 0.5
+    preds = np.asarray([
+        cont_seq[:-1][-max_horizon:] for cont_seq in cont_seqs
+    ])
+    labels = np.asarray([
+        cont_seq[-max_horizon:] for cont_seq in cont_seqs
+    ])
 
-    return rmse
+    squared_errs = (labels - preds) ** 2
+    rmses = [
+        np.mean(squared_errs[:, :horizon]) ** 0.5
+        for horizon in horizons
+    ]
+    return rmses

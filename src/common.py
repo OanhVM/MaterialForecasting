@@ -28,7 +28,7 @@ def update_global_stats_results_csv_file_name(model_name: str,
                                               company_name: str, col_name: str,
                                               min_cont_length: int,
                                               do_diff: bool,
-                                              rmse: float,
+                                              horizons: List[int], rmses: List[float],
                                               ):
     print(f"Writing to {GLOBAL_STATS_RESULTS_CSV_FILE_PATH}...")
 
@@ -37,7 +37,7 @@ def update_global_stats_results_csv_file_name(model_name: str,
             GLOBAL_STATS_RESULTS_CSV_FILE_PATH,
             index_col=["model_name", "company_name", "col_name", "min_cont_length", "do_diff"]
         )
-        results_df.loc[(model_name, company_name, col_name, min_cont_length, do_diff)] = rmse
+        results_df.loc[(model_name, company_name, col_name, min_cont_length, do_diff)] = rmses
     else:
         results_df = DataFrame.from_records([{
             "model_name": model_name,
@@ -45,11 +45,13 @@ def update_global_stats_results_csv_file_name(model_name: str,
             "col_name": col_name,
             "min_cont_length": min_cont_length,
             "do_diff": do_diff,
-            "rmse": rmse,
+            **{
+                f"rmse_{horizon}": rmse for horizon, rmse in zip(horizons, rmses)
+            },
         }]).set_index(["model_name", "company_name", "col_name", "min_cont_length", "do_diff"])
 
     makedirs(dirname(GLOBAL_STATS_RESULTS_CSV_FILE_PATH), exist_ok=True)
-    results_df.to_csv(GLOBAL_STATS_RESULTS_CSV_FILE_PATH)
+    results_df.to_csv(GLOBAL_STATS_RESULTS_CSV_FILE_PATH, float_format="%.6f")
 
     print(f"Writing to {GLOBAL_STATS_RESULTS_CSV_FILE_PATH}... DONE!")
 
