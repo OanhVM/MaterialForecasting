@@ -3,10 +3,10 @@ from argparse import ArgumentParser
 from os.path import join
 from typing import List
 
-import numpy as np
 from matplotlib import pyplot as plt
 from numpy import ndarray
 from tslearn.barycenters import dtw_barycenter_averaging
+from tslearn.utils import to_time_series_dataset
 
 from common import get_cluster_results_base_name, read_cont_seqs_cluster_csv
 
@@ -38,8 +38,7 @@ def _plot_cont_seq_clusters(cont_seqs_clusters: List[List[ndarray]], n_total_con
             axis.plot(cont_seq, c="gray", alpha=max(1e3 / n_total_cont_seq, 1 / 255.), linewidth=0.5)
 
         if len(cont_seqs) > 0:
-            axis.plot(dtw_barycenter_averaging(np.vstack(cont_seqs)), c="red")
-            # axis.plot(np.average(np.vstack(cont_seqs), axis=0), c="red")
+            axis.plot(dtw_barycenter_averaging(to_time_series_dataset(cont_seqs)), c="red")
 
         axis.set_title(f"Cluster {cluster_idx}")
 
@@ -119,9 +118,9 @@ def _main():
 
     arg_parser.add_argument("company_names", type=str, nargs="+", help="company names")
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
-    arg_parser.add_argument("--selected-cont-length", metavar="", type=int, default=24)
-    arg_parser.add_argument("--n-cluster", metavar="", type=int, default=32)
-    arg_parser.add_argument("--n-dim", metavar="", type=int, default=None)
+    arg_parser.add_argument("--selected-cont-length", "-l", metavar="", type=int, default=24)
+    arg_parser.add_argument("--n-cluster", "-c", metavar="", type=int, default=32)
+    arg_parser.add_argument("--n-dim", "-d", metavar="", type=int, default=None)
 
     args = arg_parser.parse_args()
 

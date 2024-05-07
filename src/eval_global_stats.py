@@ -51,8 +51,8 @@ def _main():
     arg_parser.add_argument("model_name", type=str, choices=EVAL_FUNC_PER_MODEL_NAME.keys())
     arg_parser.add_argument("company_names", type=str, nargs="+")
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
-    arg_parser.add_argument("--min-cont-length", metavar="", type=int, default=2)
-    arg_parser.add_argument("--do-diff", action="store_true")
+    arg_parser.add_argument("--min-cont-length", "-m", metavar="", type=int, default=2)
+    arg_parser.add_argument("--do-diff", "-d", action="store_true")
 
     args = arg_parser.parse_args()
 
