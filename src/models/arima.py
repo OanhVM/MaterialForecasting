@@ -18,6 +18,7 @@ def evaluate_arima(cont_seqs: List[ndarray], horizons: List[int], lag: int) -> L
     preds = []
     labels = []
     for idx, cont_seq in enumerate(cont_seqs):
+        print(f"evaluate_arima: idx = {idx:4d}/{len(cont_seqs)}")
         try:
             arima_result = ARIMA(cont_seq[:-max_horizon], order=(lag, 0, 0)).fit()
             preds.append(
@@ -26,10 +27,10 @@ def evaluate_arima(cont_seqs: List[ndarray], horizons: List[int], lag: int) -> L
             labels.append(
                 cont_seq[-max_horizon:][horizons - 1]
             )
-        except LinAlgError:
+        except LinAlgError as e:
             logging.error(
-                f"idx = {idx:4d}/{len(cont_seqs)} ; len(cont_seq) = {len(cont_seq):3d};\n"
-                f"cont_seq =\n{cont_seq}"
+                f"len(cont_seq) = {len(cont_seq):3d}; cont_seq =\n{cont_seq}\n"
+                f"err = {e}"
             )
     preds = np.asarray(preds)
     labels = np.asarray(labels)
