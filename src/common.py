@@ -21,20 +21,21 @@ DELIMITER_PER_COMPANY_NAME = {
 PROJECT_ROOT_DIR_PATH = abspath(join(abspath(__file__), pardir, pardir))
 
 RESULTS_DIR_PATH = join(PROJECT_ROOT_DIR_PATH, "results")
-GLOBAL_STATS_RESULTS_CSV_FILE_PATH = join(RESULTS_DIR_PATH, "global_stats_results.csv")
+GLOBAL_RESULTS_CSV_FILE_PATH = join(RESULTS_DIR_PATH, "global_results.csv")
 
 
-def update_global_stats_results_csv_file_name(model_name: str,
-                                              company_name: str, col_name: str,
-                                              min_cont_length: int,
-                                              do_diff: bool,
-                                              horizons: List[int], rmses: List[float],
-                                              ):
-    print(f"Writing to {GLOBAL_STATS_RESULTS_CSV_FILE_PATH}...")
+def update_global_results_csv_file_name(
+        model_name: str,
+        company_name: str, col_name: str,
+        min_cont_length: int,
+        do_diff: bool,
+        horizons: List[int], rmses: List[float],
+):
+    print(f"Writing to {GLOBAL_RESULTS_CSV_FILE_PATH}...")
 
-    if isfile(GLOBAL_STATS_RESULTS_CSV_FILE_PATH):
+    if isfile(GLOBAL_RESULTS_CSV_FILE_PATH):
         results_df = pd.read_csv(
-            GLOBAL_STATS_RESULTS_CSV_FILE_PATH,
+            GLOBAL_RESULTS_CSV_FILE_PATH,
             index_col=["model_name", "company_name", "col_name", "min_cont_length", "do_diff"]
         )
         results_df.loc[(model_name, company_name, col_name, min_cont_length, do_diff)] = rmses
@@ -50,10 +51,10 @@ def update_global_stats_results_csv_file_name(model_name: str,
             },
         }]).set_index(["model_name", "company_name", "col_name", "min_cont_length", "do_diff"])
 
-    makedirs(dirname(GLOBAL_STATS_RESULTS_CSV_FILE_PATH), exist_ok=True)
-    results_df.to_csv(GLOBAL_STATS_RESULTS_CSV_FILE_PATH, float_format="%.6f")
+    makedirs(dirname(GLOBAL_RESULTS_CSV_FILE_PATH), exist_ok=True)
+    results_df.to_csv(GLOBAL_RESULTS_CSV_FILE_PATH, float_format="%.6f")
 
-    print(f"Writing to {GLOBAL_STATS_RESULTS_CSV_FILE_PATH}... DONE!")
+    print(f"Writing to {GLOBAL_RESULTS_CSV_FILE_PATH}... DONE!")
 
 
 def get_cluster_results_base_name(company_name: str, selected_cont_length: int, n_cluster: int,
