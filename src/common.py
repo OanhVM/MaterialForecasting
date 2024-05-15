@@ -28,28 +28,25 @@ def update_global_results_csv_file_name(
         model_name: str,
         company_name: str, col_name: str,
         min_cont_length: int,
-        do_diff: bool,
         horizons: List[int], rmses: List[float],
 ):
     print(f"Writing to {GLOBAL_RESULTS_CSV_FILE_PATH}...")
 
+    index_record = {
+        "model_name": model_name,
+        "company_name": company_name,
+        "col_name": col_name,
+        "min_cont_length": min_cont_length,
+    }
+
     if isfile(GLOBAL_RESULTS_CSV_FILE_PATH):
-        results_df = pd.read_csv(
-            GLOBAL_RESULTS_CSV_FILE_PATH,
-            index_col=["model_name", "company_name", "col_name", "min_cont_length", "do_diff"]
-        )
-        results_df.loc[(model_name, company_name, col_name, min_cont_length, do_diff)] = rmses
+        results_df = pd.read_csv(GLOBAL_RESULTS_CSV_FILE_PATH, index_col=index_record.keys())
+        results_df.loc[tuple(index_record.values())] = rmses
     else:
         results_df = DataFrame.from_records([{
-            "model_name": model_name,
-            "company_name": company_name,
-            "col_name": col_name,
-            "min_cont_length": min_cont_length,
-            "do_diff": do_diff,
-            **{
-                f"rmse_{horizon}": rmse for horizon, rmse in zip(horizons, rmses)
-            },
-        }]).set_index(["model_name", "company_name", "col_name", "min_cont_length", "do_diff"])
+            **index_record,
+            **{f"rmse_{horizon}": rmse for horizon, rmse in zip(horizons, rmses)},
+        }]).set_index(index_record.keys())
 
     makedirs(dirname(GLOBAL_RESULTS_CSV_FILE_PATH), exist_ok=True)
     results_df.to_csv(GLOBAL_RESULTS_CSV_FILE_PATH, float_format="%.6f")
@@ -160,7 +157,7 @@ def read_cont_seqs_csv(company_name: str, min_cont_length: int = 2,
         for _, cont_seq in data.groupby("SequenceName")
         if len(cont_seq) >= min_cont_length
     ]
-    print(f"Found {len(cont_seqs)} cont_seqs in {csv_file_path}.")
+    print(f"Found {len(cont_seqs)} cont_seqs of min length {min_cont_length} in {csv_file_path}.")
 
     return cont_seqs
 
