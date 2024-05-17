@@ -2,42 +2,27 @@ import logging
 import warnings
 from typing import List
 
-import numpy as np
 from numpy import ndarray
 from numpy.linalg import LinAlgError
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from statsmodels.tsa.arima.model import ARIMA
 
 warnings.simplefilter('ignore', ConvergenceWarning)
+warnings.simplefilter('ignore', UserWarning)
 
 
-def evaluate_arima(cont_seqs: List[ndarray], horizons: List[int], lag: int, diff: int) -> List[float]:
-    max_horizon = max(horizons)
-    horizons = np.asarray(horizons)
-
+def evaluate_arima(inputs: List[ndarray], label_width: int, lag: int, diff: int) -> List[ndarray]:
     preds = []
-    labels = []
-    for idx, cont_seq in enumerate(cont_seqs):
-        print(f"evaluate_arima: idx = {idx:4d}/{len(cont_seqs)}")
+    for idx, _input in enumerate(inputs):
+
+        if idx % 100 == 0 or idx == len(inputs) - 1:
+            print(f"evaluate_arima: lag = {lag}; diff = {diff}; idx = {idx:4d}/{len(inputs)}")
+
         try:
-            arima_result = ARIMA(cont_seq[:-max_horizon], order=(lag, diff, 0)).fit()
             preds.append(
-                arima_result.forecast(steps=max_horizon)[horizons - 1]
-            )
-            labels.append(
-                cont_seq[-max_horizon:][horizons - 1]
+                ARIMA(_input, order=(lag, diff, 0)).fit().forecast(steps=label_width)
             )
         except LinAlgError as e:
-            logging.error(
-                f"len(cont_seq) = {len(cont_seq):3d}; cont_seq =\n{cont_seq}\n"
-                f"err = {e}"
-            )
-    preds = np.asarray(preds)
-    labels = np.asarray(labels)
+            logging.error(f"{e}: len(_input) = {len(_input):3d}; _input = {_input}")
 
-    squared_errs = (labels - preds) ** 2
-    rmses = [
-        np.mean(squared_errs[:, :horizon]) ** 0.5
-        for horizon in horizons
-    ]
-    return rmses
+    return preds
