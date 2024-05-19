@@ -22,21 +22,21 @@ def _make_arima_eval_func(lag: int, diff: int):
 class EvalModel(Enum):
     NAIVE = (lambda inputs, _, label_width: evaluate_naive(inputs=inputs, label_width=label_width), 1)
 
-    ARMA_3 = (_make_arima_eval_func(lag=3, diff=0), 3)
-    ARMA_6 = (_make_arima_eval_func(lag=6, diff=0), 6)
+    ARMA3 = (_make_arima_eval_func(lag=3, diff=0), 3)
+    ARMA6 = (_make_arima_eval_func(lag=6, diff=0), 6)
 
-    ARIMA_3 = (_make_arima_eval_func(lag=6, diff=1), 3)
-    ARIMA_6 = (_make_arima_eval_func(lag=6, diff=1), 6)
+    ARIMA3 = (_make_arima_eval_func(lag=6, diff=1), 3)
+    ARIMA6 = (_make_arima_eval_func(lag=6, diff=1), 6)
 
-    LSTM_4 = (partial(train_and_eval_lstm, n_neuron=4, do_balance=False), 1)
-    LSTM_8 = (partial(train_and_eval_lstm, n_neuron=8, do_balance=False), 1)
-    LSTM_16 = (partial(train_and_eval_lstm, n_neuron=16, do_balance=False), 1)
-    LSTM_32 = (partial(train_and_eval_lstm, n_neuron=32, do_balance=False), 1)
+    LSTM4 = (partial(train_and_eval_lstm, n_neuron=4, do_balance=False), 1)
+    LSTM8 = (partial(train_and_eval_lstm, n_neuron=8, do_balance=False), 1)
+    LSTM16 = (partial(train_and_eval_lstm, n_neuron=16, do_balance=False), 1)
+    LSTM32 = (partial(train_and_eval_lstm, n_neuron=32, do_balance=False), 1)
 
-    LSTM_4_B = (partial(train_and_eval_lstm, n_neuron=4, do_balance=True), 1)
-    LSTM_8_B = (partial(train_and_eval_lstm, n_neuron=8, do_balance=True), 1)
-    LSTM_16_B = (partial(train_and_eval_lstm, n_neuron=16, do_balance=True), 1)
-    LSTM_32_B = (partial(train_and_eval_lstm, n_neuron=32, do_balance=True), 1)
+    LSTM4B = (partial(train_and_eval_lstm, n_neuron=4, do_balance=True), 1)
+    LSTM8B = (partial(train_and_eval_lstm, n_neuron=8, do_balance=True), 1)
+    LSTM16B = (partial(train_and_eval_lstm, n_neuron=16, do_balance=True), 1)
+    LSTM32B = (partial(train_and_eval_lstm, n_neuron=32, do_balance=True), 1)
 
     ALL = (None, None)
 
