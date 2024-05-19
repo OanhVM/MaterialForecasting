@@ -16,8 +16,8 @@ def arima_forecast(inputs: List[ndarray], label_width: int, lag: int, diff: int,
     preds = []
     for idx, _input in enumerate(inputs):
 
-        if idx % 100 == 0 or idx == len(inputs) - 1:
-            print(f"evaluate_arima: lag = {lag}; diff = {diff}; idx = {idx:4d}/{len(inputs)}")
+        if idx + 1 % 100 == 0 or idx == len(inputs) - 1:
+            print(f"evaluate_arima: lag = {lag}; diff = {diff}; idx = {idx + 1:4d}/{len(inputs)}")
 
         try:
             preds.append(

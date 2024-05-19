@@ -115,8 +115,8 @@ def build_and_train_lstm(
 def model_forecast(model: Model, inputs: List[ndarray]) -> List[ndarray]:
     preds = []
     for idx, _input in enumerate(inputs):
-        if idx % 100 == 0 or idx == len(inputs) - 1:
-            print(f"model_forecast: idx = {idx:4d}/{len(inputs)}")
+        if idx + 1 % 100 == 0 or idx == len(inputs) - 1:
+            print(f"model_forecast: idx = {idx + 1:4d}/{len(inputs)}")
 
         preds.append(
             model(_input.reshape((1, -1, 1)))[0, :, 0].numpy()
