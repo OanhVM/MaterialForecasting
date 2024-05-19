@@ -1,6 +1,6 @@
 from os import makedirs
 from os.path import join, abspath, pardir, isfile, dirname
-from typing import Optional, Tuple, List, Union
+from typing import Optional, Tuple, List, Union, Dict
 
 import pandas as pd
 from keras.models import Model, load_model
@@ -34,7 +34,7 @@ def update_global_results_csv_file_name(
         model_name: str,
         company_name: str, col_name: str,
         min_cont_length: int,
-        horizons: List[int], rmses: List[float],
+        metric_result_per_metric_full_name: Dict[str, List[float]],
 ):
     print(f"Writing to {GLOBAL_RESULTS_CSV_FILE_PATH}...")
 
@@ -46,13 +46,23 @@ def update_global_results_csv_file_name(
     }
 
     if isfile(GLOBAL_RESULTS_CSV_FILE_PATH):
-        results_df = pd.read_csv(GLOBAL_RESULTS_CSV_FILE_PATH, index_col=tuple(index_record.keys()))
-        results_df.loc[tuple(index_record.values())] = rmses
+        results_df = pd.read_csv(
+            GLOBAL_RESULTS_CSV_FILE_PATH, 
+            index_col=tuple(index_record.keys()),
+        ).sort_index()
+        
+        results_df.loc[
+            tuple(index_record.values()),
+            metric_result_per_metric_full_name.keys(),
+        ] = metric_result_per_metric_full_name.values()
+        
     else:
         results_df = DataFrame.from_records([{
             **index_record,
-            **{f"rmse_{horizon}": rmse for horizon, rmse in zip(horizons, rmses)},
-        }]).set_index(tuple(index_record.keys()))
+            **metric_result_per_metric_full_name,
+        }]).set_index(
+            tuple(index_record.keys())
+        )
 
     makedirs(dirname(GLOBAL_RESULTS_CSV_FILE_PATH), exist_ok=True)
     results_df.to_csv(GLOBAL_RESULTS_CSV_FILE_PATH, float_format="%.6f")
