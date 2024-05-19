@@ -6,22 +6,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        USER_ID: "${USER_ID}"
-        GROUP_ID: "${GROUP_ID}"
     network_mode: host
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              device_ids: [ "1" ]
-#              capabilities: [ gpu ]
+    user: "${USER_ID:-root}"
     environment:
       TF_FORCE_GPU_ALLOW_GROWTH: "true"
     volumes:
       - ./src/:/usr/src/app/src/
       - ./data:/usr/src/app/data/
+      - ./models:/usr/src/app/models/
+      - ./results:/usr/src/app/results/
     command: [ "bash" ]
 
 

@@ -15,11 +15,3 @@ COPY src ${SRC_PATH}
 
 ENV PYTHONPATH ${PYTHONPATH}:${SRC_PATH}
 WORKDIR ${APP_PATH}
-
-ARG USER_ID
-ARG GROUP_ID
-
-RUN addgroup --gid ${GROUP_ID} user
-RUN adduser --disabled-password --gecos "" --uid ${USER_ID} --gid ${GROUP_ID} user
-RUN chown -R ${USER_ID}:${GROUP_ID} ${APP_PATH}
-USER user
