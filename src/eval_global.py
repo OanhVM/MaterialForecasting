@@ -6,21 +6,22 @@ from typing import List, Tuple
 
 from numpy import ndarray
 
-from common import read_cont_seqs_csv, save_eval_results, get_eval_results_file_path, read_eval_results
+from common import read_cont_seqs_csv, save_eval_results, get_eval_results_file_path, read_eval_results, \
+    get_model_file_path
 from models.arima import evaluate_arima
 from models.lstm import train_and_eval_lstm
 from models.naive import evaluate_naive
 
 
 def _make_arima_eval_func(lag: int, diff: int):
-    def _arima_eval_func(inputs: List[ndarray], _, label_width: int):
+    def _arima_eval_func(inputs: List[ndarray], _, label_width: int, __):
         return evaluate_arima(inputs=inputs, label_width=label_width, lag=lag, diff=diff)
 
     return _arima_eval_func
 
 
 class EvalModel(Enum):
-    NAIVE = (lambda inputs, _, label_width: evaluate_naive(inputs=inputs, label_width=label_width), 1)
+    NAIVE = (lambda inputs, _, label_width, __: evaluate_naive(inputs=inputs, label_width=label_width), 1)
 
     ARMA3 = (_make_arima_eval_func(lag=3, diff=0), 3)
     ARMA6 = (_make_arima_eval_func(lag=6, diff=0), 6)
@@ -48,8 +49,9 @@ class EvalModel(Enum):
     def min_input_width(self):
         return self._min_input_width
 
-    def __call__(self, inputs: List[ndarray], labels: List[ndarray], label_width: int):
-        return self._eval_func(inputs, labels, label_width)
+    def __call__(self, inputs: List[ndarray], labels: List[ndarray], label_width: int, model_file_path: str
+                 ) -> List[ndarray]:
+        return self._eval_func(inputs, labels, label_width, model_file_path)
 
 
 def _make_inputs_and_labels(cont_seqs: List[ndarray], label_width: int) -> Tuple[List[ndarray], List[ndarray]]:
@@ -130,8 +132,17 @@ def _eval_global(model_names: List[str],
             data_dir_path=data_dir_path,
         )
 
+        model_file_path = get_model_file_path(
+            model_name=eval_model.name.lower(),
+            company_name=company_name, col_name=col_name,
+            min_cont_length=min_cont_length, label_width=label_width,
+        )
+
         if not isfile(preds_file_path):
-            preds = eval_model(inputs=inputs, labels=labels, label_width=label_width)
+            preds = eval_model(
+                inputs=inputs, labels=labels, label_width=label_width,
+                model_file_path=model_file_path,
+            )
             save_eval_results(eval_results=preds, eval_results_file_path=preds_file_path)
 
         else:

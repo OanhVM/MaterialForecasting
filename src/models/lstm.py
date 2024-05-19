@@ -1,16 +1,17 @@
 from collections import defaultdict
-from random import Random
 from typing import List, Tuple, Dict
 
 import numpy as np
 import tensorflow as tf
 from keras import Model, Sequential
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, LSTM, Reshape
 from keras.metrics import RootMeanSquaredError
 from keras.src.optimizers import Adam
 from numpy import ndarray
 from numpy.random import default_rng
+
+from common import save_model
 
 
 def get_balanced_inputs_and_labels(
@@ -51,7 +52,7 @@ def _make_dataset(input_label_pairs: List[Tuple[ndarray, ndarray]]) -> tf.data.D
         buffer_size=len(input_label_pairs),
     ).batch(
         batch_size=len(input_label_pairs),
-    ).cache()
+    )
 
 
 def get_datasets(
@@ -85,7 +86,8 @@ def get_datasets(
 
 def build_and_train_lstm(
         train_ds: tf.data.Dataset, val_ds: tf.data.Dataset,
-        n_neuron: int, label_width: int, n_epoch: int,
+        label_width: int, n_neuron: int, n_epoch: int,
+        model_file_path: str,
         loss_name: str = "mean_squared_error", learning_rate: float = 1e-3,
 ) -> Model:
     model = Sequential([
@@ -95,17 +97,36 @@ def build_and_train_lstm(
     ])
     model.compile(loss=loss_name, optimizer=Adam(learning_rate=learning_rate), metrics=[RootMeanSquaredError()])
 
+    model_ckpt_file_path = f"{model_file_path}.ckpt"
     model.fit(
         train_ds, validation_data=val_ds, epochs=n_epoch,
-        callbacks=[EarlyStopping(monitor="val_loss", patience=int(round(0.05 * n_epoch)), mode="min")],
+        callbacks=[
+            EarlyStopping(monitor="val_loss", patience=int(round(0.025 * n_epoch)), mode="min"),
+            ModelCheckpoint(filepath=model_ckpt_file_path, save_best_only=True, save_weights_only=True),
+        ],
         verbose=2,
     )
+
+    model.load_weights(model_ckpt_file_path).expect_partial()
 
     return model
 
 
+def model_forecast(model: Model, inputs: List[ndarray]) -> List[ndarray]:
+    preds = []
+    for idx, _input in enumerate(inputs):
+        if idx % 100 == 0 or idx == len(inputs) - 1:
+            print(f"model_forecast: idx = {idx:4d}/{len(inputs)}")
+
+        preds.append(
+            model(_input.reshape((1, -1, 1)))[0, :, 0].numpy()
+        )
+
+    return preds
+
+
 def train_and_eval_lstm(
-        inputs: List[ndarray], labels: List[ndarray], label_width: int,
+        inputs: List[ndarray], labels: List[ndarray], label_width: int, model_file_path: str,
         n_neuron: int, do_balance: bool,
         n_epoch: int = 500,
 ) -> List[ndarray]:
@@ -114,12 +135,12 @@ def train_and_eval_lstm(
     # TODO: make federated
     model = build_and_train_lstm(
         train_ds=train_ds, val_ds=val_ds,
-        n_neuron=n_neuron, label_width=label_width, n_epoch=n_epoch,
+        label_width=label_width, n_neuron=n_neuron, n_epoch=n_epoch,
+        model_file_path=model_file_path,
     )
 
-    preds = []
-    for _input in inputs:
-        _preds = model.predict(_input.reshape((1, -1, 1)), verbose=0)[:, :, 0]
-        preds.extend(_preds)
+    preds = model_forecast(model=model, inputs=inputs)
+
+    save_model(model=model, model_file_path=model_file_path)
 
     return preds

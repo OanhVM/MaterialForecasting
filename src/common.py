@@ -3,12 +3,14 @@ from os.path import join, abspath, pardir, isfile, dirname
 from typing import Optional, Tuple, List, Union
 
 import pandas as pd
+from keras.models import Model, load_model
 from numpy import ndarray
 from pandas import DataFrame
 from parse import parse
 
 CONT_SEQS_FILE_NAME_FORMAT = "{company_name}_cont_seqs_min_{min_cont_length:d}.csv"
 EVAL_OUTPUTS_FILE_NAME_FORMAT = "{result_type}_{company_name}_{col_name}_l{min_cont_length:d}_lw{label_width:d}.csv"
+MODEL_FILE_NAME_FORMAT = "{model_name}_{company_name}_{col_name}_l{min_cont_length:d}_lw{label_width:d}"
 
 # TODO: see if `_cont_seq` prefix will still apply to filled sequences (to be implemented)
 CLUSTER_RESULTS_BASE_NAME_FORMAT = (
@@ -163,6 +165,34 @@ def read_eval_results(eval_results_file_path: str) -> List[ndarray]:
     ]
     print(f"Reading from {eval_results_file_path}... DONE!")
     return eval_results
+
+
+def get_model_file_path(
+        model_name: str,
+        company_name: str, col_name: str, min_cont_length: int, label_width: int,
+        models_dir_path: str = "models",
+) -> str:
+    return join(
+        models_dir_path, company_name,
+        MODEL_FILE_NAME_FORMAT.format(
+            model_name=model_name,
+            company_name=company_name, col_name=col_name,
+            min_cont_length=min_cont_length, label_width=label_width,
+        ),
+    )
+
+
+def save_model(model: Model, model_file_path: str):
+    print(f"Saving model to {model_file_path}...")
+    model.save(filepath=model_file_path)
+    print(f"Saving model to {model_file_path}... DONE!")
+
+
+def read_model(model_file_path: str) -> Model:
+    print(f"Loading model from {model_file_path}...")
+    model = load_model(model_file_path)
+    print(f"Loading model {model_file_path}... DONE!")
+    return model
 
 
 def read_cont_seqs_csv(
