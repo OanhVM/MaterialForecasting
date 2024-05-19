@@ -10,12 +10,16 @@ from keras.layers import Dense, LSTM, Reshape
 from keras.metrics import RootMeanSquaredError
 from keras.src.optimizers import Adam
 from numpy import ndarray
+from numpy.random import default_rng
 
 
 def get_balanced_inputs_and_labels(
         input_label_pairs_per_input_width: Dict[int, List[Tuple[ndarray, ndarray]]],
 ) -> Dict[int, List[Tuple[ndarray, ndarray]]]:
-    bin_sizes = np.asarray(input_label_pairs_per_input_width.keys())
+    bin_sizes = np.asarray([
+        len(input_label_pairs)
+        for input_label_pairs in input_label_pairs_per_input_width.values()
+    ])
 
     balanced_coeffs = bin_sizes ** 0.25
     balanced_coeffs /= balanced_coeffs.sum()
@@ -23,11 +27,31 @@ def get_balanced_inputs_and_labels(
     balanced_bin_sizes = np.round(balanced_coeffs * bin_sizes.sum()).astype(int)
 
     balanced_input_label_pairs_per_input_width = {
-        width: Random(37).sample(cont_seqs, k=balanced_bin_sizes[idx])
-        for idx, (width, cont_seqs) in enumerate(input_label_pairs_per_input_width.items())
+        input_width: [
+            input_label_pairs[_idx] for _idx in default_rng(seed=37).choice(
+                list(range(len(input_label_pairs))),
+                size=balanced_bin_sizes[bin_idx],
+            )
+        ]
+        for bin_idx, (input_width, (input_label_pairs)) in enumerate(input_label_pairs_per_input_width.items())
     }
 
     return balanced_input_label_pairs_per_input_width
+
+
+def _make_dataset(input_label_pairs: List[Tuple[ndarray, ndarray]]) -> tf.data.Dataset:
+    inputs, labels = [
+        np.asarray(arr).astype(np.float32)[..., np.newaxis]
+        for arr in zip(*input_label_pairs)
+    ]
+
+    return tf.data.Dataset.from_tensor_slices(
+        (inputs, labels)
+    ).shuffle(
+        buffer_size=len(input_label_pairs),
+    ).batch(
+        batch_size=len(input_label_pairs),
+    ).cache()
 
 
 def get_datasets(
@@ -36,15 +60,6 @@ def get_datasets(
 ) -> Tuple[
     tf.data.Dataset, tf.data.Dataset,
 ]:
-    def _make_dataset(_input_label_pairs: List[Tuple[ndarray, ndarray]]) -> tf.data.Dataset:
-        return tf.data.Dataset.from_tensors(
-            _input_label_pairs
-        ).shuffle(
-            buffer_size=len(_input_label_pairs),
-        ).batch(
-            batch_size=len(_input_label_pairs),
-        ).cache()
-
     input_label_pairs_per_input_width = defaultdict(list)
     for _input, label in zip(inputs, labels):
         input_label_pairs_per_input_width[len(_input)].append((_input, label))
@@ -71,7 +86,7 @@ def get_datasets(
 def build_and_train_lstm(
         train_ds: tf.data.Dataset, val_ds: tf.data.Dataset,
         n_neuron: int, label_width: int, n_epoch: int,
-        loss_name: str = "mean_squared_error", learning_rate: float = 0.5e-3,
+        loss_name: str = "mean_squared_error", learning_rate: float = 1e-3,
 ) -> Model:
     model = Sequential([
         LSTM(n_neuron),
@@ -92,7 +107,7 @@ def build_and_train_lstm(
 def train_and_eval_lstm(
         inputs: List[ndarray], labels: List[ndarray], label_width: int,
         n_neuron: int, do_balance: bool,
-        n_epoch: int = 200,
+        n_epoch: int = 500,
 ) -> List[ndarray]:
     train_ds, val_ds = get_datasets(inputs=inputs, labels=labels, do_balance=do_balance)
 
@@ -103,7 +118,8 @@ def train_and_eval_lstm(
     )
 
     preds = []
-    for _inputs, _ in train_ds.concatenate(val_ds):
-        preds.extend(model.predict(_inputs))
+    for _input in inputs:
+        _preds = model.predict(_input.reshape((1, -1, 1)), verbose=0)[:, :, 0]
+        preds.extend(_preds)
 
     return preds
