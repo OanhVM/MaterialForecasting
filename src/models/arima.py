@@ -11,7 +11,7 @@ warnings.simplefilter('ignore', ConvergenceWarning)
 warnings.simplefilter('ignore', UserWarning)
 
 
-def evaluate_arima(inputs: List[ndarray], label_width: int, lag: int, diff: int) -> List[ndarray]:
+def arima_forecast(inputs: List[ndarray], label_width: int, lag: int, diff: int) -> List[ndarray]:
     preds = []
     for idx, _input in enumerate(inputs):
 

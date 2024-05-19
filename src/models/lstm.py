@@ -125,7 +125,7 @@ def model_forecast(model: Model, inputs: List[ndarray]) -> List[ndarray]:
     return preds
 
 
-def train_and_eval_lstm(
+def train_and_forecast_lstm(
         inputs: List[ndarray], labels: List[ndarray], label_width: int, model_file_path: str,
         n_neuron: int, do_balance: bool,
         n_epoch: int = 500,

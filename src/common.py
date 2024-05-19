@@ -9,7 +9,9 @@ from pandas import DataFrame
 from parse import parse
 
 CONT_SEQS_FILE_NAME_FORMAT = "{company_name}_cont_seqs_min_{min_cont_length:d}.csv"
-EVAL_OUTPUTS_FILE_NAME_FORMAT = "{result_type}_{company_name}_{col_name}_l{min_cont_length:d}_lw{label_width:d}.csv"
+FORECAST_DATA_FILE_NAME_FORMAT = (
+    "{forecast_data_type}_{company_name}_{col_name}_l{min_cont_length:d}_lw{label_width:d}.csv"
+)
 MODEL_FILE_NAME_FORMAT = "{model_name}_{company_name}_{col_name}_l{min_cont_length:d}_lw{label_width:d}"
 
 # TODO: see if `_cont_seq` prefix will still apply to filled sequences (to be implemented)
@@ -133,38 +135,38 @@ def read_selected_data_csv(company_name: str):
     )
 
 
-def get_eval_results_file_path(
-        result_type: str,
+def get_forecast_data_file_path(
+        forecast_data_type: str,
         company_name: str, col_name: str, min_cont_length: int, label_width: int,
         data_dir_path: str = "data",
 ) -> str:
-    assert (result_type in ("inputs", "labels") or result_type.startswith("preds_"))
+    assert (forecast_data_type in ("inputs", "labels") or forecast_data_type.startswith("preds_"))
 
     return join(
         data_dir_path, company_name,
-        EVAL_OUTPUTS_FILE_NAME_FORMAT.format(
-            result_type=result_type,
+        FORECAST_DATA_FILE_NAME_FORMAT.format(
+            forecast_data_type=forecast_data_type,
             company_name=company_name, col_name=col_name,
             min_cont_length=min_cont_length, label_width=label_width,
         ),
     )
 
 
-def save_eval_results(eval_results: List[ndarray], eval_results_file_path: str):
-    print(f"Writing to {eval_results_file_path}...")
-    DataFrame(eval_results).to_csv(eval_results_file_path, header=False, index=False)
-    print(f"Writing to {eval_results_file_path}... DONE!")
+def save_forecast_data(forecast_data: List[ndarray], forecast_data_file_path: str):
+    print(f"Writing to {forecast_data_file_path}...")
+    DataFrame(forecast_data).to_csv(forecast_data_file_path, header=False, index=False)
+    print(f"Writing to {forecast_data_file_path}... DONE!")
 
 
-def read_eval_results(eval_results_file_path: str) -> List[ndarray]:
-    print(f"Reading from {eval_results_file_path}...")
-    eval_results = [
+def read_forecast_data(forecast_data_file_path: str) -> List[ndarray]:
+    print(f"Reading from {forecast_data_file_path}...")
+    forecast_data = [
         r.dropna().values for _, r in pd.read_csv(
-            eval_results_file_path, header=None, index_col=None,
+            forecast_data_file_path, header=None, index_col=None,
         ).iterrows()
     ]
-    print(f"Reading from {eval_results_file_path}... DONE!")
-    return eval_results
+    print(f"Reading from {forecast_data_file_path}... DONE!")
+    return forecast_data
 
 
 def get_model_file_path(
