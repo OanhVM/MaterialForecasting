@@ -74,9 +74,11 @@ def _evaluate(
             eval_metric.name: eval_metric(labels, preds, y_train=labels)
             for eval_metric in eval_metrics
         }
-        metric_result_per_metric_full_name = {
-            f"{metric_name}_{horizon}": metric_results[horizon - 1]
-            for metric_name, metric_results in metric_results_per_metric_name.items()
+        metric_result_and_metric_name_per_horizon = {
+            horizon: {
+                metric_name: metric_results[horizon - 1]
+                for metric_name, metric_results in metric_results_per_metric_name.items()
+            }
             for horizon in horizons
         }
 
@@ -84,7 +86,7 @@ def _evaluate(
             model_name=forecast_model.name.lower(),
             company_name=company_name, col_name=col_name,
             min_cont_length=min_cont_length,
-            metric_result_per_metric_full_name=metric_result_per_metric_full_name,
+            metric_result_and_metric_name_per_horizon=metric_result_and_metric_name_per_horizon,
         )
 
 
@@ -94,15 +96,15 @@ def _main():
     arg_parser.add_argument("company_names", type=str, nargs="+")
     arg_parser.add_argument(
         "--metric-names", "-m", type=str, nargs="+", required=True,
-        choices=[*[m.name.lower() for m in EvalMetrics], "all"],
+        choices=[*[m.name for m in EvalMetrics], "all"],
     )
+    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+")
     arg_parser.add_argument(
         "--model-names", "-M", type=str, nargs="+", required=True,
         choices=[*[m.name.lower() for m in ForecastModel], "all"],
     )
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
     arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=2)
-    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+")
 
     args = arg_parser.parse_args()
 

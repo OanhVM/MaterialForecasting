@@ -29,45 +29,59 @@ PROJECT_ROOT_DIR_PATH = abspath(join(abspath(__file__), pardir, pardir))
 RESULTS_DIR_PATH = join(PROJECT_ROOT_DIR_PATH, "results")
 GLOBAL_RESULTS_CSV_FILE_PATH = join(RESULTS_DIR_PATH, "global_results.csv")
 
+_RESULTS_CSV_INDEX_COLS = ["company_name", "col_name", "min_cont_length", "horizon", "model_name"]
+
 
 def update_global_results_csv_file_name(
         model_name: str,
         company_name: str, col_name: str,
         min_cont_length: int,
-        metric_result_per_metric_full_name: Dict[str, List[float]],
+        metric_result_and_metric_name_per_horizon: Dict[int, Dict[str, float]],
 ):
     print(f"Writing to {GLOBAL_RESULTS_CSV_FILE_PATH}...")
 
-    index_record = {
-        "model_name": model_name,
-        "company_name": company_name,
-        "col_name": col_name,
-        "min_cont_length": min_cont_length,
-    }
-
     if isfile(GLOBAL_RESULTS_CSV_FILE_PATH):
         results_df = pd.read_csv(
-            GLOBAL_RESULTS_CSV_FILE_PATH, 
-            index_col=tuple(index_record.keys()),
+            GLOBAL_RESULTS_CSV_FILE_PATH,
+            index_col=_RESULTS_CSV_INDEX_COLS,
         ).sort_index()
-        
-        results_df.loc[
-            tuple(index_record.values()),
-            metric_result_per_metric_full_name.keys(),
-        ] = metric_result_per_metric_full_name.values()
-        
+
+        for horizon, metric_result_and_metric_name in metric_result_and_metric_name_per_horizon.items():
+            results_df.loc[
+                (company_name, col_name, min_cont_length, horizon, model_name),
+                metric_result_and_metric_name.keys(),
+            ] = metric_result_and_metric_name.values()
+
     else:
-        results_df = DataFrame.from_records([{
-            **index_record,
-            **metric_result_per_metric_full_name,
-        }]).set_index(
-            tuple(index_record.keys())
-        )
+        results_df = DataFrame.from_records([
+            {
+                **dict(zip(_RESULTS_CSV_INDEX_COLS, (company_name, col_name, min_cont_length, horizon, model_name))),
+                **metric_result_and_metric_name,
+            }
+            for horizon, metric_result_and_metric_name in metric_result_and_metric_name_per_horizon.items()
+        ]).set_index(_RESULTS_CSV_INDEX_COLS)
 
     makedirs(dirname(GLOBAL_RESULTS_CSV_FILE_PATH), exist_ok=True)
     results_df.to_csv(GLOBAL_RESULTS_CSV_FILE_PATH, float_format="%.6f")
 
     print(f"Writing to {GLOBAL_RESULTS_CSV_FILE_PATH}... DONE!")
+
+
+def read_global_results_csv_file_name(
+        company_name: str, col_name: str, min_cont_length: int,
+) -> DataFrame:
+    print(f"Reading from {GLOBAL_RESULTS_CSV_FILE_PATH}...")
+
+    results_df = pd.read_csv(
+        GLOBAL_RESULTS_CSV_FILE_PATH,
+        index_col=_RESULTS_CSV_INDEX_COLS,
+    ).sort_index().loc[
+        (company_name, col_name, min_cont_length)
+    ]
+
+    print(f"Reading from {GLOBAL_RESULTS_CSV_FILE_PATH}... DONE!")
+
+    return results_df
 
 
 def get_cluster_results_base_name(company_name: str, selected_cont_length: int, n_cluster: int,

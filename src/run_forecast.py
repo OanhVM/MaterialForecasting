@@ -149,9 +149,9 @@ def _main():
         "--model-names", "-M", type=str, nargs="+", required=True,
         choices=[*[m.name.lower() for m in ForecastModel], "all"],
     )
+    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+")
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
     arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=2)
-    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+")
 
     args = arg_parser.parse_args()
 
