@@ -1,4 +1,5 @@
 from collections import defaultdict
+from os.path import isdir
 from typing import List, Tuple, Dict
 
 import numpy as np
@@ -11,7 +12,7 @@ from keras.src.optimizers import Adam
 from numpy import ndarray
 from numpy.random import default_rng
 
-from common import save_model
+from common import save_model, read_model
 
 
 def get_balanced_inputs_and_labels(
@@ -84,10 +85,8 @@ def get_datasets(
     return train_ds, val_ds
 
 
-def build_and_train_lstm(
-        train_ds: tf.data.Dataset, val_ds: tf.data.Dataset,
-        label_width: int, n_neuron: int, n_epoch: int,
-        model_file_path: str,
+def build_lstm(
+        label_width: int, n_neuron: int,
         loss_name: str = "mean_squared_error", learning_rate: float = 1e-3,
 ) -> Model:
     model = Sequential([
@@ -96,6 +95,20 @@ def build_and_train_lstm(
         Reshape([label_width, 1]),
     ])
     model.compile(loss=loss_name, optimizer=Adam(learning_rate=learning_rate), metrics=[RootMeanSquaredError()])
+
+    return model
+
+
+def build_and_train_lstm(
+        train_ds: tf.data.Dataset, val_ds: tf.data.Dataset,
+        label_width: int, n_neuron: int, n_epoch: int,
+        model_file_path: str,
+        loss_name: str = "mean_squared_error", learning_rate: float = 1e-3,
+) -> Model:
+    model = build_lstm(
+        label_width=label_width, n_neuron=n_neuron,
+        loss_name=loss_name, learning_rate=learning_rate,
+    )
 
     model_ckpt_file_path = f"{model_file_path}.ckpt"
     model.fit(
@@ -115,7 +128,7 @@ def build_and_train_lstm(
 def model_forecast(model: Model, inputs: List[ndarray]) -> List[ndarray]:
     preds = []
     for idx, _input in enumerate(inputs):
-        if idx + 1 % 100 == 0 or idx == len(inputs) - 1:
+        if (idx + 1) % 100 == 0 or idx == len(inputs) - 1:
             print(f"model_forecast: idx = {idx + 1:4d}/{len(inputs)}")
 
         preds.append(
@@ -132,15 +145,17 @@ def train_and_forecast_lstm(
 ) -> List[ndarray]:
     train_ds, val_ds = get_datasets(inputs=inputs, labels=labels, do_balance=do_balance)
 
-    # TODO: make federated
-    model = build_and_train_lstm(
-        train_ds=train_ds, val_ds=val_ds,
-        label_width=label_width, n_neuron=n_neuron, n_epoch=n_epoch,
-        model_file_path=model_file_path,
-    )
+    if not isdir(model_file_path):
+        model = build_and_train_lstm(
+            train_ds=train_ds, val_ds=val_ds,
+            label_width=label_width, n_neuron=n_neuron, n_epoch=n_epoch,
+            model_file_path=model_file_path,
+        )
+        save_model(model=model, model_file_path=model_file_path)
+
+    else:
+        model = read_model(model_file_path=model_file_path)
 
     preds = model_forecast(model=model, inputs=inputs)
-
-    save_model(model=model, model_file_path=model_file_path)
 
     return preds

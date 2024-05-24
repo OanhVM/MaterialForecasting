@@ -193,6 +193,32 @@ def read_forecast_data(forecast_data_file_path: str) -> List[ndarray]:
     return forecast_data
 
 
+def get_model_file_name(
+        model_name: str,
+        company_name: str, col_name: str, min_cont_length: int, label_width: int,
+) -> str:
+    return MODEL_FILE_NAME_FORMAT.format(
+        model_name=model_name,
+        company_name=company_name, col_name=col_name,
+        min_cont_length=min_cont_length, label_width=label_width,
+    )
+
+
+def parse_model_file_name(model_file_name: str) -> Tuple[str, str, str, int, int]:
+    result = parse(MODEL_FILE_NAME_FORMAT, model_file_name)
+
+    try:
+        model_name = result["model_name"]
+        company_name = result["company_name"]
+        col_name = result["col_name"]
+        min_cont_length = result["min_cont_length"]
+        label_width = result["label_width"]
+    except (ValueError, KeyError, TypeError):
+        raise ValueError(f"Invalid model file name: {model_file_name}")
+
+    return model_name, company_name, col_name, min_cont_length, label_width
+
+
 def get_model_file_path(
         model_name: str,
         company_name: str, col_name: str, min_cont_length: int, label_width: int,
@@ -200,7 +226,7 @@ def get_model_file_path(
 ) -> str:
     return join(
         models_dir_path, company_name,
-        MODEL_FILE_NAME_FORMAT.format(
+        get_model_file_name(
             model_name=model_name,
             company_name=company_name, col_name=col_name,
             min_cont_length=min_cont_length, label_width=label_width,

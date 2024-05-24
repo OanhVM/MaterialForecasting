@@ -16,8 +16,14 @@ _COLORS = np.roll(colormaps["tab20"].colors, 1, axis=0)
 def plot_metric_results(
         company_name: str, col_name: str, min_cont_length: int,
         metric_names: List[str], model_names: List[str],
-        scale: float = 1.0,
+        scale: float = 3.5,
 ):
+    if metric_names == ["all"]:
+        metric_names = [m.name for m in EvalMetrics]
+
+    if model_names == ["all"]:
+        model_names = [m.name.lower() for m in ForecastModel]
+
     results_df = read_global_results_csv_file_name(
         company_name=company_name, col_name=col_name, min_cont_length=min_cont_length,
     )
@@ -28,7 +34,7 @@ def plot_metric_results(
             tuple(metric_names),
         ]
 
-        fig, ax = plt.subplots(figsize=(12 * scale, 4 * scale), dpi=150)
+        fig, ax = plt.subplots(figsize=(5 * scale, 1 * scale), dpi=100)
         ax.set_title(f"Company {company_name} {horizon}-month Forecasting Errors ({', '.join(metric_names)})")
 
         xs = np.arange(len(metric_names))
@@ -46,9 +52,9 @@ def plot_metric_results(
             ax.bar(xs + offset, metric_values, bar_width, label=model_name, color=_COLORS[model_idx])
 
         ax.set_xticks(xs, metric_names)
-        ax.set_ylim((0, per_horizon_results_df.values.max() * 1.15))
+        ax.set_ylim((0, per_horizon_results_df.values.max() * 1.25))
 
-        ax.legend(loc="upper left", ncols=len(model_names))
+        ax.legend(loc="upper center", ncols=len(model_names))
         fig.tight_layout()
 
         plt.savefig(join("results", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png"))
@@ -60,15 +66,15 @@ def _main():
 
     arg_parser.add_argument("company_names", type=str, nargs="+")
     arg_parser.add_argument(
-        "--metric-names", "-m", type=str, nargs="+", required=True,
-        choices=[*[m.name for m in EvalMetrics], "all"],
+        "--metric-names", "-m", type=str, nargs="+",
+        choices=[*[m.name for m in EvalMetrics], "all"], default=["all"],
     )
     arg_parser.add_argument(
-        "--model-names", "-M", type=str, nargs="+", required=True,
-        choices=[*[m.name.lower() for m in ForecastModel], "all"],
+        "--model-names", "-M", type=str, nargs="+",
+        choices=[*[m.name.lower() for m in ForecastModel], "all"], default=["all"],
     )
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
-    arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=2)
+    arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=13)
 
     args = arg_parser.parse_args()
 

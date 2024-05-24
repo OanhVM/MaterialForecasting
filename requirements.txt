@@ -7,3 +7,4 @@ parse~=1.19.1
 statsmodels~=0.14.0
 tensorflow~=2.13.0
 sktime==0.29.0
+parse~=1.19.1

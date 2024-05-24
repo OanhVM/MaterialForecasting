@@ -95,16 +95,16 @@ def _main():
 
     arg_parser.add_argument("company_names", type=str, nargs="+")
     arg_parser.add_argument(
-        "--metric-names", "-m", type=str, nargs="+", required=True,
-        choices=[*[m.name for m in EvalMetrics], "all"],
+        "--metric-names", "-m", type=str, nargs="+",
+        choices=[*[m.name for m in EvalMetrics], "all"], default=["all"],
     )
-    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+")
+    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+", default=[1, 3, 6])
     arg_parser.add_argument(
-        "--model-names", "-M", type=str, nargs="+", required=True,
-        choices=[*[m.name.lower() for m in ForecastModel], "all"],
+        "--model-names", "-M", type=str, nargs="+",
+        choices=[*[m.name.lower() for m in ForecastModel], "all"], default=["all"],
     )
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
-    arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=2)
+    arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=13)
 
     args = arg_parser.parse_args()
 

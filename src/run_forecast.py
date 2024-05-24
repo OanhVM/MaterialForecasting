@@ -10,6 +10,7 @@ from common import read_cont_seqs_csv, save_forecast_data, get_forecast_data_fil
     get_model_file_path
 from models.arima import arima_forecast
 from models.lstm import train_and_forecast_lstm
+from models.lstm_fed import forecast_lstm_fed
 from models.naive import naive_forecast
 
 
@@ -22,15 +23,18 @@ class ForecastModel(Enum):
     ARIMA3 = (partial(arima_forecast, lag=3, diff=1), 3)
     ARIMA6 = (partial(arima_forecast, lag=6, diff=1), 6)
 
-    LSTM4 = (partial(train_and_forecast_lstm, n_neuron=4, do_balance=False), 1)
     LSTM8 = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=False), 1)
-    LSTM16 = (partial(train_and_forecast_lstm, n_neuron=16, do_balance=False), 1)
     LSTM32 = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=False), 1)
 
-    LSTM4B = (partial(train_and_forecast_lstm, n_neuron=4, do_balance=True), 1)
     LSTM8B = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=True), 1)
-    LSTM16B = (partial(train_and_forecast_lstm, n_neuron=16, do_balance=True), 1)
     LSTM32B = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=True), 1)
+
+    # TODO: this is a bit ugly/duplicated? (partial() is cheating)
+    LSTM8F = (partial(forecast_lstm_fed), 1)
+    LSTM32F = (partial(forecast_lstm_fed), 1)
+
+    LSTM8BF = (partial(forecast_lstm_fed), 1)
+    LSTM32BF = (partial(forecast_lstm_fed), 1)
 
     def __init__(self, forecast_func: callable, min_input_width: int):
         self._forecast_func: callable = forecast_func
@@ -124,16 +128,15 @@ def _forecast(
             data_dir_path=data_dir_path,
         )
 
-        model_file_path = get_model_file_path(
-            model_name=forecast_model.name.lower(),
-            company_name=company_name, col_name=col_name,
-            min_cont_length=min_cont_length, label_width=label_width,
-        )
-
         if not isfile(preds_file_path):
             preds = forecast_model(
-                inputs=inputs, label_width=label_width,
-                labels=labels, model_file_path=model_file_path,
+                inputs=inputs, label_width=label_width, labels=labels,
+                # ML models -specific parameters
+                model_file_path=get_model_file_path(
+                    model_name=forecast_model.name.lower(),
+                    company_name=company_name, col_name=col_name,
+                    min_cont_length=min_cont_length, label_width=label_width,
+                ),
             )
             save_forecast_data(forecast_data=preds, forecast_data_file_path=preds_file_path)
 
@@ -146,12 +149,12 @@ def _main():
 
     arg_parser.add_argument("company_names", type=str, nargs="+")
     arg_parser.add_argument(
-        "--model-names", "-M", type=str, nargs="+", required=True,
-        choices=[*[m.name.lower() for m in ForecastModel], "all"],
+        "--model-names", "-M", type=str, nargs="+",
+        choices=[*[m.name.lower() for m in ForecastModel], "all"], default=["all"],
     )
-    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+")
+    arg_parser.add_argument("--horizons", "-H", metavar="", type=int, nargs="+", default=[1, 3, 6])
     arg_parser.add_argument("--col-name", metavar="", type=str, default="NormSpend")
-    arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=2)
+    arg_parser.add_argument("--min-cont-length", "-l", metavar="", type=int, default=13)
 
     args = arg_parser.parse_args()
 
