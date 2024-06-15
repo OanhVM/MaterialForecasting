@@ -1,4 +1,3 @@
-import logging
 from argparse import ArgumentParser
 from colorsys import rgb_to_hls, hls_to_rgb
 from os.path import join
@@ -11,6 +10,7 @@ from numpy import ndarray
 from common import read_global_results_csv_file_name
 from run_eval import EvalMetrics
 from run_forecast import ForecastModel
+
 
 def adjust_lightness(color: Union[Tuple[int, int, int], ndarray], amount: float = 0.5):
     c = rgb_to_hls(*color)
@@ -72,12 +72,6 @@ def plot_metric_results(
         ax.set_title(f"Company {company_name} {horizon}-month Forecasting Errors ({', '.join(metric_names)})")
 
         xs = np.arange(len(metric_names))
-
-        if len(model_names) > len(_COLORS):
-            logging.warning(
-                f"The number of models ({len(model_names)}) exceeded the"
-                f"number of supported colors ({len(_COLORS)})."
-            )
 
         bar_width = 0.7 / len(model_names)
         max_ylim = max(_YLIM_PER_METRIC_NAME[metric_name] for metric_name in metric_names)
