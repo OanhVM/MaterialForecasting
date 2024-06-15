@@ -1,16 +1,50 @@
 import logging
 from argparse import ArgumentParser
+from colorsys import rgb_to_hls, hls_to_rgb
 from os.path import join
-from typing import List
+from typing import List, Union, Tuple
 
 import numpy as np
 from matplotlib import pyplot as plt, colormaps
+from numpy import ndarray
 
 from common import read_global_results_csv_file_name
 from run_eval import EvalMetrics
 from run_forecast import ForecastModel
 
-_COLORS = np.roll(colormaps["tab20"].colors, 1, axis=0)
+def adjust_lightness(color: Union[Tuple[int, int, int], ndarray], amount: float = 0.5):
+    c = rgb_to_hls(*color)
+    return hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
+
+
+_COLOR_PER_MODEL_NAME = {
+    _m.name.lower(): adjust_lightness(colormaps["tab20c"].colors[_ci], amount=0.9) for _m, _ci in [
+        (ForecastModel.NAIVE, 16),
+
+        (ForecastModel.ARMA3, 4),
+        (ForecastModel.ARMA6, 5),
+        (ForecastModel.ARIMA3, 6),
+        (ForecastModel.ARIMA6, 7),
+
+        (ForecastModel.LSTM8, 0),
+        (ForecastModel.LSTM32, 1),
+        (ForecastModel.LSTM8B, 2),
+        (ForecastModel.LSTM32B, 3),
+
+        (ForecastModel.LSTM8F, 8),
+        (ForecastModel.LSTM32F, 9),
+        (ForecastModel.LSTM8BF, 10),
+        (ForecastModel.LSTM32BF, 11),
+    ]
+}
+
+_YLIM_PER_METRIC_NAME = {
+    EvalMetrics.MAE.name: 0.69,
+    EvalMetrics.MdAE.name: 0.69,
+    EvalMetrics.RMSE.name: 0.69,
+    EvalMetrics.MASE.name: 1.55,
+    EvalMetrics.MdASE.name: 1.55,
+}
 
 
 def plot_metric_results(
@@ -46,18 +80,28 @@ def plot_metric_results(
             )
 
         bar_width = 0.7 / len(model_names)
+        max_ylim = max(_YLIM_PER_METRIC_NAME[metric_name] for metric_name in metric_names)
 
         for model_idx, (model_name, metric_values) in enumerate(zip(model_names, per_horizon_results_df.values)):
             offset = bar_width * (model_idx - len(model_names) / 2.) * 1.2
-            ax.bar(xs + offset, metric_values, bar_width, label=model_name, color=_COLORS[model_idx])
+            ax.bar(
+                xs + offset, metric_values,
+                width=bar_width, label=model_name,
+                color=_COLOR_PER_MODEL_NAME[model_name],
+            )
 
         ax.set_xticks(xs, metric_names)
-        ax.set_ylim((0, per_horizon_results_df.values.max() * 1.25))
+        ax.set_ylim((0, max_ylim))
+        ax.set_yticks(np.arange(0., max_ylim, 0.1))
 
         ax.legend(loc="upper center", ncols=len(model_names))
         fig.tight_layout()
 
+        fig_file_path = join("results", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png")
+        print(f"Writing to {fig_file_path}...")
         plt.savefig(join("results", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png"))
+        print(f"Writing to {fig_file_path}... DONE!")
+
         plt.close()
 
 
