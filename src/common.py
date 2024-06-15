@@ -15,9 +15,6 @@ FORECAST_DATA_FILE_NAME_FORMAT = (
 MODEL_FILE_NAME_FORMAT = "{model_name}_{company_name}_{col_name}_l{min_cont_length:d}_lw{label_width:d}"
 
 # TODO: see if `_cont_seq` prefix will still apply to filled sequences (to be implemented)
-CLUSTER_RESULTS_BASE_NAME_FORMAT = (
-    "{company_name}_cont_seq_clusters_l{selected_cont_length:d}_k{n_cluster:d}_d{n_dim:d}"
-)
 DELIMITER_PER_COMPANY_NAME = {
     "A": ",",
     "B": ";",
@@ -84,45 +81,8 @@ def read_global_results_csv_file_name(
     return results_df
 
 
-def get_cluster_results_base_name(company_name: str, selected_cont_length: int, n_cluster: int,
-                                  n_dim: Optional[int] = None,
-                                  ) -> str:
-    return CLUSTER_RESULTS_BASE_NAME_FORMAT.format(
-        company_name=company_name,
-        selected_cont_length=selected_cont_length,
-        n_cluster=n_cluster,
-        n_dim=n_dim if n_dim else selected_cont_length
-    )
-
-
-def parse_cluster_results_base_name(cluster_results_base_name: str) -> Tuple[str, int, int, int]:
-    result = parse(CLUSTER_RESULTS_BASE_NAME_FORMAT, cluster_results_base_name)
-    try:
-        company_name = result["company_name"]
-        selected_cont_length = result["selected_cont_length"]
-        n_cluster = result["n_cluster"]
-        n_dim = result["n_dim"]
-    except (ValueError, KeyError, TypeError):
-        raise ValueError(f"Invalid cluster results base name: {cluster_results_base_name}")
-
-    return company_name, selected_cont_length, n_cluster, n_dim
-
-
 def get_selected_data_csv_file_path(company_name: str, data_dir_path: str = "data") -> str:
     return join(data_dir_path, company_name, f"{company_name}_selected.csv")
-
-
-def get_cont_seqs_cluster_csv_file_path(
-        company_name: str, selected_cont_length: int, n_cluster: int, n_dim: int, cluster_idx: int,
-        data_dir_path: str = "data",
-):
-    cluster_results_base_name = get_cluster_results_base_name(
-        company_name=company_name, selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
-    )
-
-    return join(
-        data_dir_path, company_name, cluster_results_base_name, f"{cluster_results_base_name}_{cluster_idx}.csv",
-    )
 
 
 def read_source_csv(company_name: str, data_dir_path: str = "data"):
@@ -276,26 +236,5 @@ def read_cont_seqs_csv(
         if len(cont_seq) >= min_cont_length
     ]
     print(f"Found {len(cont_seqs)} cont_seqs of min length {min_cont_length} in {csv_file_path}.")
-
-    return cont_seqs
-
-
-def read_cont_seqs_cluster_csv(company_name: str, col_name: str,
-                               selected_cont_length: int, n_cluster: int, n_dim: int, cluster_idx: int,
-                               data_dir_path: str = "data",
-                               ) -> List[ndarray]:
-    csv_file_path = get_cont_seqs_cluster_csv_file_path(
-        company_name=company_name, selected_cont_length=selected_cont_length, n_cluster=n_cluster, n_dim=n_dim,
-        cluster_idx=cluster_idx,
-        data_dir_path=data_dir_path,
-    )
-
-    data = pd.read_csv(
-        csv_file_path,
-        dtype={col_name: float, "SeqIdx": int},
-    )
-
-    cont_seqs = [cont_seq[col_name].values for _, cont_seq in data.groupby("SeqIdx")]
-    print(f"Found {len(cont_seqs)} cont_seqs in {csv_file_path}.")
 
     return cont_seqs
