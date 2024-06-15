@@ -5,7 +5,7 @@ import pandas as pd
 from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 
-from common import CONT_SEQ_FILE_NAME_FORMAT, read_selected_data_csv
+from common import CONT_SEQS_FILE_NAME_FORMAT, read_selected_data_csv
 
 
 def _is_continuous(group_rows: DataFrame, row_idx: int):
@@ -50,7 +50,7 @@ def main(company_name: str, min_cont_length: int = 2):
 
     dst_csv_path = join(
         "data", company_name,
-        CONT_SEQ_FILE_NAME_FORMAT.format(company_name=company_name, min_cont_length=min_cont_length),
+        CONT_SEQS_FILE_NAME_FORMAT.format(company_name=company_name, min_cont_length=min_cont_length),
     )
     makedirs(dirname(dst_csv_path), exist_ok=True)
     pd.concat(continuous_seqs).to_csv(dst_csv_path)
