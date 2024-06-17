@@ -15,34 +15,39 @@ from models.naive import naive_forecast
 
 
 class ForecastModel(Enum):
-    NAIVE = (naive_forecast, 1)
+    NAIVE = (naive_forecast, 1, "Naive")
 
-    ARMA3 = (partial(arima_forecast, lag=3, diff=0), 3)
-    ARMA6 = (partial(arima_forecast, lag=6, diff=0), 6)
+    ARMA3 = (partial(arima_forecast, lag=3, diff=0), 3, "ARMA (lag=3)")
+    ARMA6 = (partial(arima_forecast, lag=6, diff=0), 6, "ARMA (lag=6)")
 
-    ARIMA3 = (partial(arima_forecast, lag=3, diff=1), 3)
-    ARIMA6 = (partial(arima_forecast, lag=6, diff=1), 6)
+    ARIMA3 = (partial(arima_forecast, lag=3, diff=1), 3, "ARIMA (lag=3)")
+    ARIMA6 = (partial(arima_forecast, lag=6, diff=1), 6, "ARIMA (lag=6)")
 
-    LSTM8 = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=False), 1)
-    LSTM32 = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=False), 1)
+    LSTM8 = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=False), 1, "LSTM (n_neuron=8)")
+    LSTM32 = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=False), 1, "LSTM (n_neuron=32)")
 
-    LSTM8B = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=True), 1)
-    LSTM32B = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=True), 1)
+    LSTM8B = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=True), 1, "LSTM (n_neuron=8, balanced)")
+    LSTM32B = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=True), 1, "LSTM (n_neuron=32, balanced)")
 
     # TODO: this is a bit ugly/duplicated? (partial() is cheating)
-    LSTM8F = (partial(forecast_lstm_fed), 1)
-    LSTM32F = (partial(forecast_lstm_fed), 1)
+    LSTM8F = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=8, federated)")
+    LSTM32F = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=32, federated)")
 
-    LSTM8BF = (partial(forecast_lstm_fed), 1)
-    LSTM32BF = (partial(forecast_lstm_fed), 1)
+    LSTM8BF = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=8, balanced, federated)")
+    LSTM32BF = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=32, balanced, federated)")
 
-    def __init__(self, forecast_func: callable, min_input_width: int):
+    def __init__(self, forecast_func: callable, min_input_width: int, display_name: str):
         self._forecast_func: callable = forecast_func
         self._min_input_width: int = min_input_width
+        self._display_name: str = display_name
 
     @property
-    def min_input_width(self):
+    def min_input_width(self) -> int:
         return self._min_input_width
+
+    @property
+    def display_name(self) -> str:
+        return self._display_name
 
     def __call__(self, *args, **kwargs) -> List[ndarray]:
         return self._forecast_func(*args, **kwargs)

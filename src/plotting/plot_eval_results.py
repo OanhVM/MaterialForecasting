@@ -69,7 +69,9 @@ def plot_metric_results(
         ]
 
         fig, ax = plt.subplots(figsize=(5 * scale, 1 * scale), dpi=100)
-        ax.set_title(f"Company {company_name} {horizon}-month Forecasting Errors ({', '.join(metric_names)})")
+        ax.set_title(
+            f"Company {company_name} {horizon}-month Forecasting Errors ({', '.join(metric_names)})"
+        )
 
         xs = np.arange(len(metric_names))
 
@@ -93,7 +95,7 @@ def plot_metric_results(
 
         fig_file_path = join("results", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png")
         print(f"Writing to {fig_file_path}...")
-        plt.savefig(join("results", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png"))
+        plt.savefig(fig_file_path)
         print(f"Writing to {fig_file_path}... DONE!")
 
         plt.close()
