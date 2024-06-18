@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
-from os.path import join
+from os import makedirs
+from os.path import join, dirname
 from typing import Tuple, List, Literal
 
 import numpy as np
@@ -61,7 +62,12 @@ def _make_plot(company_name: str, bin_edges: List[Tuple[int, int]], bin_sizes: n
 
     fig.tight_layout()
 
-    plt.savefig(join("data", company_name, f"freq_distr_series_length_{tag}_{company_name}.png"))
+    fig_file_path = join("results", "freq_distr", f"freq_distr_series_length_{tag}_{company_name}.png")
+    print(f"Writing to {fig_file_path}...")
+    makedirs(dirname(fig_file_path), exist_ok=True)
+    plt.savefig(fig_file_path)
+    print(f"Writing to {fig_file_path}... DONE!")
+
     plt.close()
 
 

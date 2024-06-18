@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from colorsys import rgb_to_hls, hls_to_rgb
-from os.path import join
+from os import makedirs
+from os.path import join, dirname
 from typing import List, Union, Tuple
 
 import numpy as np
@@ -95,6 +96,7 @@ def plot_metric_results(
 
         fig_file_path = join("results", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png")
         print(f"Writing to {fig_file_path}...")
+        makedirs(dirname(fig_file_path), exist_ok=True)
         plt.savefig(fig_file_path)
         print(f"Writing to {fig_file_path}... DONE!")
 
