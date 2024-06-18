@@ -62,7 +62,7 @@ def _make_inputs_and_labels(cont_seqs: List[ndarray], label_width: int) -> Tuple
     return inputs, labels
 
 
-def _get_inputs_and_labels(
+def get_inputs_and_labels(
         company_name: str, col_name: str, min_cont_length: int, label_width: int,
         data_dir_path: str = "data",
 ) -> Tuple[List[ndarray], List[ndarray]]:
@@ -119,7 +119,7 @@ def _forecast(
         f"actual_min_cont_length = {actual_min_cont_length}"
     )
 
-    inputs, labels = _get_inputs_and_labels(
+    inputs, labels = get_inputs_and_labels(
         company_name=company_name, col_name=col_name,
         min_cont_length=actual_min_cont_length, label_width=label_width,
         data_dir_path=data_dir_path,

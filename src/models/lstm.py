@@ -41,6 +41,21 @@ def get_balanced_inputs_and_labels(
     return balanced_input_label_pairs_per_input_width
 
 
+def get_input_label_pairs_per_input_width(
+        inputs: List[ndarray], labels: List[ndarray], do_balance: bool,
+) -> Dict[int, List[Tuple[ndarray, ndarray]]]:
+    input_label_pairs_per_input_width = defaultdict(list)
+    for _input, label in zip(inputs, labels):
+        input_label_pairs_per_input_width[len(_input)].append((_input, label))
+
+    if do_balance:
+        input_label_pairs_per_input_width = get_balanced_inputs_and_labels(
+            input_label_pairs_per_input_width=input_label_pairs_per_input_width,
+        )
+
+    return input_label_pairs_per_input_width
+
+
 def _make_dataset(input_label_pairs: List[Tuple[ndarray, ndarray]]) -> tf.data.Dataset:
     inputs, labels = [
         np.asarray(arr).astype(np.float32)[..., np.newaxis]
@@ -62,14 +77,9 @@ def get_datasets(
 ) -> Tuple[
     tf.data.Dataset, tf.data.Dataset,
 ]:
-    input_label_pairs_per_input_width = defaultdict(list)
-    for _input, label in zip(inputs, labels):
-        input_label_pairs_per_input_width[len(_input)].append((_input, label))
-
-    if do_balance:
-        input_label_pairs_per_input_width = get_balanced_inputs_and_labels(
-            input_label_pairs_per_input_width=input_label_pairs_per_input_width,
-        )
+    input_label_pairs_per_input_width = get_input_label_pairs_per_input_width(
+        inputs=inputs, labels=labels, do_balance=do_balance,
+    )
 
     train_ds, val_ds = None, None
     for input_label_pairs in input_label_pairs_per_input_width.values():
