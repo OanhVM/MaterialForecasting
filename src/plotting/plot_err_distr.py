@@ -49,7 +49,7 @@ def _make_plot(company_name: str, forecast_model: ForecastModel, horizons: List[
 
     fig.tight_layout()
 
-    fig_file_path = join("results", f"error_distr_{company_name}_{forecast_model.name.lower()}.png")
+    fig_file_path = join("results", "err_distr", f"error_distr_{company_name}_{forecast_model.name.lower()}.png")
     print(f"Writing to {fig_file_path}...")
     plt.savefig(fig_file_path)
     print(f"Writing to {fig_file_path}... DONE!")
