@@ -24,7 +24,7 @@ def _make_plot(company_name: str, forecast_model: ForecastModel, horizons: List[
                ):
     fig, axes = plt.subplots(
         nrows=1, ncols=len(horizons), sharey="all",
-        figsize=(len(horizons) * 1.25 * scale, 1.2 * scale), dpi=75,
+        figsize=(len(horizons) * scale, scale), dpi=100,
     )
 
     for ax, horizon in zip(axes, horizons):
@@ -50,7 +50,7 @@ def _make_plot(company_name: str, forecast_model: ForecastModel, horizons: List[
 
     fig.tight_layout()
 
-    fig_file_path = join("results", "err_distr", f"error_distr_{company_name}_{forecast_model.name.lower()}.png")
+    fig_file_path = join("results", "error_distr", f"error_distr_{company_name}_{forecast_model.name.lower()}.png")
     print(f"Writing to {fig_file_path}...")
     makedirs(dirname(fig_file_path), exist_ok=True)
     plt.savefig(fig_file_path)
