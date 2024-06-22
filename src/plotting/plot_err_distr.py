@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from os import makedirs
 from os.path import join, dirname
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -59,14 +59,12 @@ def _make_plot(company_name: str, forecast_model: ForecastModel, horizons: List[
     plt.close()
 
 
-def plot_err_distr(model_names: List[str], company_name: str, col_name: str, min_cont_length: int, horizons: List[int],
-                   data_dir_path: str = "data",
-                   ):
-    if model_names == ["all"]:
-        forecast_models: List[ForecastModel] = list(ForecastModel)
-    else:
-        forecast_models: List[ForecastModel] = [ForecastModel[model_name.upper()] for model_name in model_names]
-
+def get_errs_per_forecast_model(
+        forecast_models: List[ForecastModel],
+        company_name: str, col_name: str, min_cont_length: int,
+        horizons: List[int],
+        data_dir_path: str = "data",
+) -> Dict[ForecastModel, ndarray]:
     label_width = max(horizons)
 
     labels = read_forecast_data(
@@ -79,6 +77,7 @@ def plot_err_distr(model_names: List[str], company_name: str, col_name: str, min
     )
     labels = np.asarray(labels)
 
+    errs_per_forecast_model = {}
     for forecast_model in forecast_models:
         preds = read_forecast_data(
             forecast_data_file_path=get_forecast_data_file_path(
@@ -88,9 +87,32 @@ def plot_err_distr(model_names: List[str], company_name: str, col_name: str, min
                 data_dir_path=data_dir_path,
             ),
         )
-        preds = np.asarray(preds)
-        errs = np.abs(labels - preds)
+        errs = np.abs(labels - np.asarray(preds))
 
+        errs_per_forecast_model[forecast_model] = errs
+
+    return errs_per_forecast_model
+
+
+def plot_err_distr(
+        model_names: List[str], company_name: str, col_name: str, min_cont_length: int, horizons: List[int],
+        data_dir_path: str = "data",
+):
+    if model_names == ["all"]:
+        forecast_models: List[ForecastModel] = list(ForecastModel)
+    else:
+        forecast_models: List[ForecastModel] = [ForecastModel[model_name.upper()] for model_name in model_names]
+
+    errs_per_forecast_model = get_errs_per_forecast_model(
+        forecast_models=forecast_models,
+        company_name=company_name,
+        col_name=col_name,
+        min_cont_length=min_cont_length,
+        horizons=horizons,
+        data_dir_path=data_dir_path,
+    )
+
+    for forecast_model, errs in errs_per_forecast_model.items():
         _make_plot(
             company_name=company_name, forecast_model=forecast_model,
             horizons=horizons, errs=errs,

@@ -18,9 +18,10 @@ def adjust_lightness(color: Union[Tuple[int, int, int], ndarray], amount: float 
     return hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
 
 
-_COLOR_PER_MODEL_NAME = {
-    _m.name.lower(): adjust_lightness(colormaps["tab20c"].colors[_ci], amount=0.9) for _m, _ci in [
-        (ForecastModel.NAIVE, 16),
+COLOR_PER_MODEL_NAME = {
+    _m.name.lower(): adjust_lightness(colormaps["tab20c"].colors[_ci], amount=0.9)
+    for _m, _ci in [
+        (ForecastModel.NAIVE, 17),
 
         (ForecastModel.ARMA3, 4),
         (ForecastModel.ARMA6, 5),
@@ -84,7 +85,7 @@ def plot_metric_results(
             ax.bar(
                 xs + offset, metric_values,
                 width=bar_width, label=model_name,
-                color=_COLOR_PER_MODEL_NAME[model_name],
+                color=COLOR_PER_MODEL_NAME[model_name],
             )
 
         ax.set_xticks(xs, metric_names)
@@ -94,7 +95,7 @@ def plot_metric_results(
         ax.legend(loc="upper center", ncols=len(model_names))
         fig.tight_layout()
 
-        fig_file_path = join("results", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png")
+        fig_file_path = join("results", "metrics", f"metrics_{company_name}_{horizon}.{'_'.join(metric_names)}.png")
         print(f"Writing to {fig_file_path}...")
         makedirs(dirname(fig_file_path), exist_ok=True)
         plt.savefig(fig_file_path)
