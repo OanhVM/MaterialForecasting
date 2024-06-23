@@ -18,7 +18,7 @@ def _get_relevant_model_file_paths(model_file_path: str) -> Tuple[List[str], str
 
     model_file_paths = [
         get_model_file_path(
-            model_name=fed_model_name[:-1],
+            model_name=fed_model_name[1:],  # e.g. FLSTM32_F -> LSTM32
             company_name=company_name, col_name=col_name,
             min_cont_length=min_cont_length, label_width=label_width,
         )

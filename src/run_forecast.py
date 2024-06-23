@@ -8,6 +8,7 @@ from numpy import ndarray
 
 from common import read_cont_seqs_csv, save_forecast_data, get_forecast_data_file_path, read_forecast_data, \
     get_model_file_path
+from data_balancer import BalanceStrategy
 from models.arima import arima_forecast
 from models.lstm import train_and_forecast_lstm
 from models.lstm_fed import forecast_lstm_fed
@@ -23,18 +24,24 @@ class ForecastModel(Enum):
     ARIMA3 = (partial(arima_forecast, lag=3, diff=1), 3, "ARIMA (lag=3)")
     ARIMA6 = (partial(arima_forecast, lag=6, diff=1), 6, "ARIMA (lag=6)")
 
-    LSTM8 = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=False), 1, "LSTM (n_neuron=8)")
-    LSTM32 = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=False), 1, "LSTM (n_neuron=32)")
+    LSTM8 = (partial(train_and_forecast_lstm, n_neuron=8, balance_strategy=None), 1, "LSTM (n_neuron=8)")
+    LSTM32 = (partial(train_and_forecast_lstm, n_neuron=32, balance_strategy=None), 1, "LSTM (n_neuron=32)")
 
-    LSTM8B = (partial(train_and_forecast_lstm, n_neuron=8, do_balance=True), 1, "LSTM (n_neuron=8, balanced)")
-    LSTM32B = (partial(train_and_forecast_lstm, n_neuron=32, do_balance=True), 1, "LSTM (n_neuron=32, balanced)")
+    LSTM8BV = (
+        partial(train_and_forecast_lstm, n_neuron=8, balance_strategy=BalanceStrategy.VARIANCE),
+        1, "LSTM (n_neuron=8, balanced)",
+    )
+    LSTM32BV = (
+        partial(train_and_forecast_lstm, n_neuron=32, balance_strategy=BalanceStrategy.VARIANCE),
+        1, "LSTM (n_neuron=32, balanced)",
+    )
 
     # TODO: this is a bit ugly/duplicated? (partial() is cheating)
-    LSTM8F = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=8, federated)")
-    LSTM32F = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=32, federated)")
+    FLSTM8 = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=8, federated)")
+    FLSTM32 = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=32, federated)")
 
-    LSTM8BF = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=8, balanced, federated)")
-    LSTM32BF = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=32, balanced, federated)")
+    FLSTM8BV = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=8, balanced, federated)")
+    FLSTM32BV = (partial(forecast_lstm_fed), 1, "LSTM (n_neuron=32, balanced, federated)")
 
     def __init__(self, forecast_func: callable, min_input_width: int, display_name: str):
         self._forecast_func: callable = forecast_func

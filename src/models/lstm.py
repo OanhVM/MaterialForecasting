@@ -1,6 +1,5 @@
-from collections import defaultdict
 from os.path import isdir
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -10,50 +9,9 @@ from keras.layers import Dense, LSTM, Reshape
 from keras.metrics import RootMeanSquaredError
 from keras.src.optimizers import Adam
 from numpy import ndarray
-from numpy.random import default_rng
 
 from common import save_model, read_model
-
-
-def get_balanced_inputs_and_labels(
-        input_label_pairs_per_input_width: Dict[int, List[Tuple[ndarray, ndarray]]],
-) -> Dict[int, List[Tuple[ndarray, ndarray]]]:
-    bin_sizes = np.asarray([
-        len(input_label_pairs)
-        for input_label_pairs in input_label_pairs_per_input_width.values()
-    ])
-
-    balanced_coeffs = bin_sizes ** 0.25
-    balanced_coeffs /= balanced_coeffs.sum()
-
-    balanced_bin_sizes = np.round(balanced_coeffs * bin_sizes.sum()).astype(int)
-
-    balanced_input_label_pairs_per_input_width = {
-        input_width: [
-            input_label_pairs[_idx] for _idx in default_rng(seed=37).choice(
-                list(range(len(input_label_pairs))),
-                size=balanced_bin_sizes[bin_idx],
-            )
-        ]
-        for bin_idx, (input_width, (input_label_pairs)) in enumerate(input_label_pairs_per_input_width.items())
-    }
-
-    return balanced_input_label_pairs_per_input_width
-
-
-def get_input_label_pairs_per_input_width(
-        inputs: List[ndarray], labels: List[ndarray], do_balance: bool,
-) -> Dict[int, List[Tuple[ndarray, ndarray]]]:
-    input_label_pairs_per_input_width = defaultdict(list)
-    for _input, label in zip(inputs, labels):
-        input_label_pairs_per_input_width[len(_input)].append((_input, label))
-
-    if do_balance:
-        input_label_pairs_per_input_width = get_balanced_inputs_and_labels(
-            input_label_pairs_per_input_width=input_label_pairs_per_input_width,
-        )
-
-    return input_label_pairs_per_input_width
+from data_balancer import get_input_label_pairs_per_input_width, BalanceStrategy
 
 
 def _make_dataset(input_label_pairs: List[Tuple[ndarray, ndarray]]) -> tf.data.Dataset:
@@ -72,13 +30,14 @@ def _make_dataset(input_label_pairs: List[Tuple[ndarray, ndarray]]) -> tf.data.D
 
 
 def get_datasets(
-        inputs: List[ndarray], labels: List[ndarray], do_balance: bool,
+        inputs: List[ndarray], labels: List[ndarray],
+        balance_strategy: Optional[BalanceStrategy] = None,
         val_ratio: float = 0.2,
 ) -> Tuple[
     tf.data.Dataset, tf.data.Dataset,
 ]:
     input_label_pairs_per_input_width = get_input_label_pairs_per_input_width(
-        inputs=inputs, labels=labels, do_balance=do_balance,
+        inputs=inputs, labels=labels, balance_strategy=balance_strategy,
     )
 
     train_ds, val_ds = None, None
@@ -150,10 +109,11 @@ def model_forecast(model: Model, inputs: List[ndarray]) -> List[ndarray]:
 
 def train_and_forecast_lstm(
         inputs: List[ndarray], labels: List[ndarray], label_width: int, model_file_path: str,
-        n_neuron: int, do_balance: bool,
+        n_neuron: int,
+        balance_strategy: Optional[BalanceStrategy] = None,
         n_epoch: int = 500,
 ) -> List[ndarray]:
-    train_ds, val_ds = get_datasets(inputs=inputs, labels=labels, do_balance=do_balance)
+    train_ds, val_ds = get_datasets(inputs=inputs, labels=labels, balance_strategy=balance_strategy)
 
     if not isdir(model_file_path):
         model = build_and_train_lstm(

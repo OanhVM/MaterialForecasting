@@ -30,13 +30,13 @@ COLOR_PER_MODEL_NAME = {
 
         (ForecastModel.LSTM8, 0),
         (ForecastModel.LSTM32, 1),
-        (ForecastModel.LSTM8B, 2),
-        (ForecastModel.LSTM32B, 3),
+        (ForecastModel.LSTM8BV, 2),
+        (ForecastModel.LSTM32BV, 3),
 
-        (ForecastModel.LSTM8F, 8),
-        (ForecastModel.LSTM32F, 9),
-        (ForecastModel.LSTM8BF, 10),
-        (ForecastModel.LSTM32BF, 11),
+        (ForecastModel.FLSTM8, 8),
+        (ForecastModel.FLSTM32, 9),
+        (ForecastModel.FLSTM8BV, 10),
+        (ForecastModel.FLSTM32BV, 11),
     ]
 }
 
