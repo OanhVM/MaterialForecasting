@@ -13,11 +13,11 @@ from run_forecast import ForecastModel
 
 
 def _make_plot(company_name: str, horizons: List[int], errs_per_forecast_model: Dict[ForecastModel, ndarray],
-               scale: float = 4,
+               scale: float = 3.,
                ):
     fig, axes = plt.subplots(
         nrows=1, ncols=len(horizons), sharey="all",
-        figsize=(len(horizons) * scale * 1.5, scale), dpi=100,
+        figsize=(len(horizons) * scale * 1.5, scale), dpi=150,
         layout="constrained",
     )
 
@@ -47,6 +47,7 @@ def _make_plot(company_name: str, horizons: List[int], errs_per_forecast_model: 
         boxes, [m.name.lower() for m in errs_per_forecast_model.keys()],
         loc="outside lower center",
         ncols=len(errs_per_forecast_model.keys()),
+        columnspacing=0.8,
     )
     fig.suptitle(f"Company {company_name} Forecasting Error Distribution")
 
